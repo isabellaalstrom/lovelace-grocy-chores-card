@@ -60,10 +60,10 @@ customElements.whenDefined('card-tools').then(() => {
 													<div class="secondary ${chore._next_estimated_execution_time != null ? this.checkDueClass(chore._next_estimated_execution_time) : ""}">
 														Scheduled for: ${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time) : "-"}
 													</div>
-													<div class="secondary">Last done: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
+													<div class="secondary">Last tracked: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
 												</div>
 												<div>
-													<mwc-button @click=${ev => this._doNow(chore._chore_id)}>Do now</mwc-button>
+													<mwc-button @click=${ev => this._doNow(chore._chore_id)}>Track</mwc-button>
 												</div>
 											</div>
 											`
