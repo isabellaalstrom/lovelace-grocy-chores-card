@@ -81,23 +81,24 @@ customElements.whenDefined('card-tools').then(() => {
 													<div class="secondary">Last tracked: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
 												</div>
 												<div>
-													<mwc-button @click=${ev => this._doNow(chore._chore_id)}>Track</mwc-button>
+                    <mwc-button @click=${ev => this._track(chore._chore_id)}>Track</mwc-button>
 												</div>
 											</div>
-											`
-										)}
 									</div>
+                <div class="secondary">Look in Grocy for ${this.notShowing.length} more chores...</div>
+                `
+              )}` : cardTools.LitHtml`<div class="info flex">No chores!</div>`}
 						</ha-card>`}
         `;
       }    
-      _doNow(choreId){
-				console.log("doing chore #" + choreId);
+    _track(choreId){
 				this._hass.callService("grocy", "execute_chore", {
 					chore_id: choreId,
 					tracked_time: new Date(),
 					done_by: 2
 				});
 			}
+
       _renderStyle() {
           return cardTools.LitHtml
           `
