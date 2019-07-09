@@ -84,10 +84,12 @@ customElements.whenDefined('card-tools').then(() => {
                     <mwc-button @click=${ev => this._track(chore._chore_id)}>Track</mwc-button>
                   </div>
                 </div>
-                </div>
-                <div class="secondary">Look in Grocy for ${this.notShowing.length} more chores...</div>
+
                 `
               )}` : cardTools.LitHtml`<div class="info flex">No chores!</div>`}
+            </div>
+            ${this.chores.length > 0 ? cardTools.LitHtml`<div class="secondary">Look in Grocy for ${this.notShowing.length} more chores...</div>`
+            : cardTools.LitHtml`<div class="secondary">Add some chores in Grocy to get started.</div>`}
           </ha-card>`}
       `;
     }    
