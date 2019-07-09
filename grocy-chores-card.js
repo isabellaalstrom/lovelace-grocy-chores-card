@@ -36,6 +36,24 @@ customElements.whenDefined('card-tools').then(() => {
 					return "Today";
 				else if (diffDays == 1)
 					return "Tomorrow";
+      else if (diffDays == 2)
+        return "In 2 days";
+      else if (diffDays == 3)
+        return "In 3 days";
+      else if (diffDays == 4)
+        return "In 4 days";
+      else if (diffDays == 5)
+        return "In 5 days";
+      else if (diffDays == 6)
+        return "In 6 days";
+      else if (diffDays >= 7 && diffDays <= 13)
+        return "Next week";
+      else if (diffDays >= 14 && diffDays <= 20)
+        return "In two weeks";
+      else if (diffDays >= 21 && diffDays <= 28)
+        return "In three weeks";
+      else if (diffDays >= 29 && diffDays <= 60)
+        return "Next month";
 				else
 					return dueDate.substr(0, 10);
 			}
