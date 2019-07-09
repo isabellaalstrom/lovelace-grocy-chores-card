@@ -28,7 +28,9 @@ views:
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
 | type | string | **Required** | `custom:grocy-chores-card`
-| entity | string | **Required** | The entity id of your Grocy sensor
+| entity | string | **Required** | The entity id of your Grocy sensor.
+| title | string | `"Chores"` | The title of the card.
+| show_quantity | number | 7 | The number of chores you want to show in the card.
 
 
 Like my work and want to say thanks? Do it here:
