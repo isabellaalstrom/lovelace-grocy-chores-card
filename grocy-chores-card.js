@@ -138,7 +138,7 @@ customElements.whenDefined('card-tools').then(() => {
       this._hass = hass;
   
       const entity = hass.states[this.config.entity];
-      this.header = this.config.title;
+      this.header = this.config.title == null ? "Chores" : this.config.title;
       this.show_quantity = this.config.show_quantity == null ? 7 : this.config.show_quantity;
 
       var chores = JSON.parse(entity.attributes.chores);
