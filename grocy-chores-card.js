@@ -88,8 +88,8 @@ customElements.whenDefined('card-tools').then(() => {
                 `
               )}` : cardTools.LitHtml`<div class="info flex">No chores!</div>`}
             </div>
-            ${this.chores.length > 0 ? cardTools.LitHtml`<div class="secondary">Look in Grocy for ${this.notShowing.length} more chores...</div>`
-            : cardTools.LitHtml`<div class="secondary">Add some chores in Grocy to get started.</div>`}
+            ${this.notShowing.length > 0 ? cardTools.LitHtml`<div class="secondary">Look in Grocy for ${this.notShowing.length} more chores...</div>`
+            : ""}
           </ha-card>`}
       `;
     }    
@@ -141,7 +141,9 @@ customElements.whenDefined('card-tools').then(() => {
   
       const entity = hass.states[this.config.entity];
       this.header = this.config.title == null ? "Chores" : this.config.title;
-      this.show_quantity = this.config.show_quantity == null ? 7 : this.config.show_quantity;
+
+      this.show_quantity = this.config.show_quantity == null ? null : this.config.show_quantity;
+      this.show_days = this.config.show_days == null ? null : this.config.show_days;
 
       var chores = JSON.parse(entity.attributes.chores);
       var allChores = []
@@ -152,15 +154,34 @@ customElements.whenDefined('card-tools').then(() => {
         })
 
         chores.map(chore =>{
-          if(chore._next_estimated_execution_time.slice(0,4) == "2999"){
-            chore._next_estimated_execution_time = "Whenever";
-            allChores.unshift(chore)
+          if(this.show_days != null) {
+            var diffDays = this.calculateDueDate(chore._next_estimated_execution_time);
+            if(diffDays < this.show_days){
+              allChores.push(chore);
+            }
+            else if(chore._next_estimated_execution_time != null && chore._next_estimated_execution_time.slice(0,4) == "2999") {
+              chore._next_estimated_execution_time = "Whenever";
+              allChores.unshift(chore)
+            }
           }
-          else
-            allChores.push(chore);
+          else {
+            if(chore._next_estimated_execution_time != null && chore._next_estimated_execution_time.slice(0,4) == "2999"){
+              chore._next_estimated_execution_time = "Whenever";
+              allChores.unshift(chore)
+            }
+            else
+              allChores.push(chore);
+          }
         })
-        this.chores = allChores.slice(0, this.show_quantity);
-        this.notShowing = allChores.slice(this.show_quantity);
+        
+        if(this.show_quantity != null){
+          this.chores = allChores.slice(0, this.show_quantity);
+          this.notShowing = allChores.slice(this.show_quantity);
+        }
+        else{
+          this.chores = allChores;
+          this.notShowing = 0;
+        }
       }
       else
         this.chores = allChores;
