@@ -13,9 +13,16 @@ For manual installation see [this guide](https://github.com/thomasloven/hass-con
 **This card reqires [card tools](https://github.com/thomasloven/lovelace-card-tools).**
 
 
+
 ## Example configuration
 
+
+
 ```yaml
+title: My awesome Lovelace config
+resources:
+  - url: /local/grocy-chores-card.js
+    type: js
 views:
   title: My view
   cards:
