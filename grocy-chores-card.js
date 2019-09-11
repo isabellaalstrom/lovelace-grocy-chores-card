@@ -15,7 +15,14 @@ customElements.whenDefined('card-tools').then(() => {
       var firstDate = new Date();
       var secondDate = new Date(dueDate);
       
-      var diffDays = Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
+      var diffDays;
+
+      if(firstDate > secondDate) {
+        diffDays = -1;
+      }
+      else
+        diffDays = Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
+
       return diffDays;
     }
 
@@ -24,14 +31,17 @@ customElements.whenDefined('card-tools').then(() => {
       if (diffDays == 0)
         return "due-today";
       else if (diffDays < 0)
-        return "due";
+        return "overdue";
       else
         return "not-due";
     }
 
     formatDueDate(dueDate) {
       var diffDays = this.calculateDueDate(dueDate);
-      if (diffDays == 0)
+
+      if (diffDays < 0)
+        return "Overdue";      
+      else if (diffDays == 0)
         return "Today";
       else if (diffDays == 1)
         return "Tomorrow";
@@ -75,8 +85,8 @@ customElements.whenDefined('card-tools').then(() => {
                 <div class="info flex">
                   <div>
                     ${chore._name}
-                    <div class="secondary ${chore._next_estimated_execution_time != null ? this.checkDueClass(chore._next_estimated_execution_time) : ""}">
-                      Scheduled for: ${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time) : "-"}
+                    <div class="secondary">
+                      Scheduled for: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore._next_estimated_execution_time) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time) : "-"}</span>
                     </div>
                     <div class="secondary">Last tracked: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
                   </div>
@@ -97,7 +107,7 @@ customElements.whenDefined('card-tools').then(() => {
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
         tracked_time: new Date(),
-        done_by: 2
+        done_by: this.userId
       });
     }
 
@@ -122,7 +132,7 @@ customElements.whenDefined('card-tools').then(() => {
               display: flex;
               justify-content: space-between;
             }
-            .due {
+            .overdue {
               color: red !important;
             }
             .due-today {
@@ -141,10 +151,14 @@ customElements.whenDefined('card-tools').then(() => {
   
       const entity = hass.states[this.config.entity];
       this.header = this.config.title == null ? "Chores" : this.config.title;
+      this.userId = this.config.user_id == null ? 1 : this.config.user_id;
 
       this.show_quantity = this.config.show_quantity == null ? null : this.config.show_quantity;
       this.show_days = this.config.show_days == null ? null : this.config.show_days;
 
+      if (entity.state == 'unknown')
+        throw new Error("The Grocy sensor is unknown.");
+        
       var chores = JSON.parse(entity.attributes.chores);
       var allChores = []
 

@@ -5,8 +5,6 @@ A Lovelace custom card for [custom component Grocy](https://github.com/custom-co
 
 Easiest installation via [HACS](https://custom-components.github.io/hacs/).
 
-Search the store and if the card or integration you want aren't available, add it as a [custom repository](https://custom-components.github.io/hacs/usage/settings/#add-custom-repositories).
-
 For manual installation see [this guide](https://github.com/thomasloven/hass-config/wiki/Lovelace-Plugins).
 
 
@@ -39,6 +37,7 @@ views:
 | title | string | `"Chores"` | The title of the card.
 | show_quantity | number | **Optional** | The number of chores you want to show in the card.
 | show_days | number | **Optional** | `7` to only show chores that's due within 7 days.
+| user_id | number | **Optional** | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
 
 
 Like my work and want to say thanks? Do it here:
