@@ -150,7 +150,7 @@ customElements.whenDefined('card-tools').then(() => {
       this._hass = hass;
   
       const entity = hass.states[this.config.entity];
-      this.header = this.config.title == null ? this.hass.localize("default_title") : this.config.title;
+      this.header = this.config.title == null ? "Chores" : this.config.title;
       this.userId = this.config.user_id == null ? 1 : this.config.user_id;
 
       this.show_quantity = this.config.show_quantity == null ? null : this.config.show_quantity;
