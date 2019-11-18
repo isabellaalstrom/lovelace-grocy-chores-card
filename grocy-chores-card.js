@@ -12,56 +12,56 @@ customElements.whenDefined('card-tools').then(() => {
     
     calculateDueDate(dueDate){
       var oneDay = 24*60*60*1000; // hours*minutes*seconds*milliseconds
-      var firstDate = new Date();
-      var secondDate = new Date(dueDate);
-      
-      var diffDays;
+      var today = new Date();
+      today.setHours(0,0,0,0)
 
-      if(firstDate > secondDate) {
-        diffDays = -1;
+      var splitDate = dueDate.split(/[- :]/)
+      var parsedDueDate = new Date(splitDate[0], splitDate[1]-1, splitDate[2]);
+      parsedDueDate.setHours(0,0,0,0)
+      
+      var dueInDays;
+      if(today > parsedDueDate) {
+        dueInDays = -1;
       }
       else
-        diffDays = Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
+        dueInDays = Math.round(Math.abs((today.getTime() - parsedDueDate.getTime())/(oneDay)));
 
-      return diffDays;
+      return dueInDays;
     }
 
-    checkDueClass(dueDate) {
-      var diffDays = this.calculateDueDate(dueDate);
-      if (diffDays == 0)
+    checkDueClass(dueInDays) {
+      if (dueInDays == 0)
         return "due-today";
-      else if (diffDays < 0)
+      else if (dueInDays < 0)
         return "overdue";
       else
         return "not-due";
     }
 
-    formatDueDate(dueDate) {
-      var diffDays = this.calculateDueDate(dueDate);
-
-      if (diffDays < 0)
+    formatDueDate(dueDate, dueInDays) {
+      if (dueInDays < 0)
         return "Overdue";      
-      else if (diffDays == 0)
+      else if (dueInDays == 0)
         return "Today";
-      else if (diffDays == 1)
+      else if (dueInDays == 1)
         return "Tomorrow";
-      else if (diffDays == 2)
+      else if (dueInDays == 2)
         return "In 2 days";
-      else if (diffDays == 3)
+      else if (dueInDays == 3)
         return "In 3 days";
-      else if (diffDays == 4)
+      else if (dueInDays == 4)
         return "In 4 days";
-      else if (diffDays == 5)
+      else if (dueInDays == 5)
         return "In 5 days";
-      else if (diffDays == 6)
+      else if (dueInDays == 6)
         return "In 6 days";
-      else if (diffDays >= 7 && diffDays <= 13)
+      else if (dueInDays >= 7 && dueInDays <= 13)
         return "Next week";
-      else if (diffDays >= 14 && diffDays <= 20)
+      else if (dueInDays >= 14 && dueInDays <= 20)
         return "In two weeks";
-      else if (diffDays >= 21 && diffDays <= 28)
+      else if (dueInDays >= 21 && dueInDays <= 28)
         return "In three weeks";
-      else if (diffDays >= 29 && diffDays <= 60)
+      else if (dueInDays >= 29 && dueInDays <= 60)
         return "Next month";
       else
         return dueDate.substr(0, 10);
@@ -86,7 +86,7 @@ customElements.whenDefined('card-tools').then(() => {
                   <div>
                     ${chore._name}
                     <div class="secondary">
-                      Scheduled for: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore._next_estimated_execution_time) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time) : "-"}</span>
+                      Scheduled for: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
                     <div class="secondary">Last tracked: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
                   </div>
@@ -164,13 +164,20 @@ customElements.whenDefined('card-tools').then(() => {
 
       if(chores != null){
         chores.sort(function(a,b){
-          return new Date(a._next_estimated_execution_time) - new Date(b._next_estimated_execution_time);
+          var aSplitDate = a._next_estimated_execution_time.split(/[- :]/)
+          var bSplitDate = b._next_estimated_execution_time.split(/[- :]/)
+
+          var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
+          var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
+
+          return aParsedDueDate - bParsedDueDate;
         })
 
         chores.map(chore =>{
+          var dueInDays = this.calculateDueDate(chore._next_estimated_execution_time);
+          chore.dueInDays = dueInDays;
           if(this.show_days != null) {
-            var diffDays = this.calculateDueDate(chore._next_estimated_execution_time);
-            if(diffDays < this.show_days){
+            if(dueInDays <= this.show_days){
               allChores.push(chore);
             }
             else if(chore._next_estimated_execution_time != null && chore._next_estimated_execution_time.slice(0,4) == "2999") {
