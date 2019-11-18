@@ -25,7 +25,7 @@ views:
   title: My view
   cards:
     - type: custom:grocy-chores-card
-      entity: sensor.grocy
+      entity: sensor.grocy_chores
 ```
 
 ## Options
