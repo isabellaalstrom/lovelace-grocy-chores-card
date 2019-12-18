@@ -15,7 +15,7 @@ customElements.whenDefined('card-tools').then(() => {
       var today = new Date();
       today.setHours(0,0,0,0)
 
-      var splitDate = dueDate.split(/[- :]/)
+      var splitDate = dueDate.split(/[- :T]/)
       var parsedDueDate = new Date(splitDate[0], splitDate[1]-1, splitDate[2]);
       parsedDueDate.setHours(0,0,0,0)
       
