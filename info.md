@@ -30,6 +30,20 @@ views:
 | show_days | number | **Optional** | `7` to only show chores that's due within 7 days.
 | user_id | number | **Optional** | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
 
+## Advanced options
+I have added the possibility to translate the english in the card to whatever you like.
+
+```yaml
+custom_translation:
+  overdue: "Försenad"
+  today: "Idag"
+  due: "Dags"
+  last_tracked: "Senast"
+  track: "Gör nu"
+  empty: "Tom"
+  more: "Det finns {number} fler göromål i Grocy"
+```
+
 
 Like my work and want to say thanks? Do it here:
 
