@@ -40,29 +40,9 @@ customElements.whenDefined('card-tools').then(() => {
 
     formatDueDate(dueDate, dueInDays) {
       if (dueInDays < 0)
-        return "Overdue";      
+        return this.config.custom_translation.overdue != null ? this.config.custom_translation.overdue : "Overdue";
       else if (dueInDays == 0)
-        return "Today";
-      else if (dueInDays == 1)
-        return "Tomorrow";
-      else if (dueInDays == 2)
-        return "In 2 days";
-      else if (dueInDays == 3)
-        return "In 3 days";
-      else if (dueInDays == 4)
-        return "In 4 days";
-      else if (dueInDays == 5)
-        return "In 5 days";
-      else if (dueInDays == 6)
-        return "In 6 days";
-      else if (dueInDays >= 7 && dueInDays <= 13)
-        return "Next week";
-      else if (dueInDays >= 14 && dueInDays <= 20)
-        return "In two weeks";
-      else if (dueInDays >= 21 && dueInDays <= 28)
-        return "In three weeks";
-      else if (dueInDays >= 29 && dueInDays <= 60)
-        return "Next month";
+        return this.config.custom_translation.today != null ? this.config.custom_translation.today : "Today";
       else
         return dueDate.substr(0, 10);
     }
@@ -86,19 +66,19 @@ customElements.whenDefined('card-tools').then(() => {
                   <div>
                     ${chore._name}
                     <div class="secondary">
-                      Scheduled for: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
+                    ${this.config.custom_translation.due != null ? this.config.custom_translation.due : "Due"}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
-                    <div class="secondary">Last tracked: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
+                    <div class="secondary">${this.config.custom_translation.last_tracked != null ? this.config.custom_translation.last_tracked : "Last tracked"}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
                   </div>
                   <div>
-                    <mwc-button @click=${ev => this._track(chore._chore_id)}>Track</mwc-button>
+                    <mwc-button @click=${ev => this._track(chore._chore_id)}>${this.config.custom_translation.track != null ? this.config.custom_translation.track : "Track"}</mwc-button>
                   </div>
                 </div>
 
                 `
-              )}` : cardTools.LitHtml`<div class="info flex">No chores!</div>`}
+              )}` : cardTools.LitHtml`<div class="info flex">${this.config.custom_translation.empty != null ? this.config.custom_translation.empty : "No chores!"}</div>`}
             </div>
-            ${this.notShowing.length > 0 ? cardTools.LitHtml`<div class="secondary">Look in Grocy for ${this.notShowing.length} more chores...</div>`
+            ${this.notShowing.length > 0 ? cardTools.LitHtml`<div class="secondary">${this.config.custom_translation.more != null ? this.config.custom_translation.more.replace("{number}", this.notShowing.length) : "Look in Grocy for " + this.notShowing.length + " more chores..."}</div>`
             : ""}
           </ha-card>`}
       `;
@@ -165,8 +145,8 @@ customElements.whenDefined('card-tools').then(() => {
       if(chores != null){
         chores.sort(function(a,b){
           if (a._next_estimated_execution_time != null && b._next_estimated_execution_time != null) {
-            var aSplitDate = a._next_estimated_execution_time.split(/[- :]/)
-            var bSplitDate = b._next_estimated_execution_time.split(/[- :]/)
+            var aSplitDate = a._next_estimated_execution_time.split(/[- :T]/)
+            var bSplitDate = b._next_estimated_execution_time.split(/[- :T]/)
   
             var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
             var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
