@@ -40,9 +40,9 @@ customElements.whenDefined('card-tools').then(() => {
 
     formatDueDate(dueDate, dueInDays) {
       if (dueInDays < 0)
-        return this.config.custom_translation.overdue != null ? this.config.custom_translation.overdue : "Overdue";
+        return this.config.custom_translation != null && this.config.custom_translation.overdue != null ? this.config.custom_translation.overdue : "Overdue";
       else if (dueInDays == 0)
-        return this.config.custom_translation.today != null ? this.config.custom_translation.today : "Today";
+        return this.config.custom_translation != null && this.config.custom_translation.today != null ? this.config.custom_translation.today : "Today";
       else
         return dueDate.substr(0, 10);
     }
@@ -66,19 +66,19 @@ customElements.whenDefined('card-tools').then(() => {
                   <div>
                     ${chore._name}
                     <div class="secondary">
-                    ${this.config.custom_translation.due != null ? this.config.custom_translation.due : "Due"}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
+                    ${this.config.custom_translation != null && this.config.custom_translation.due != null ? this.config.custom_translation.due : "Due"}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
-                    <div class="secondary">${this.config.custom_translation.last_tracked != null ? this.config.custom_translation.last_tracked : "Last tracked"}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
+                    <div class="secondary">${this.config.custom_translation != null && this.config.custom_translation.last_tracked != null ? this.config.custom_translation.last_tracked : "Last tracked"}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} </div>
                   </div>
                   <div>
-                    <mwc-button @click=${ev => this._track(chore._chore_id)}>${this.config.custom_translation.track != null ? this.config.custom_translation.track : "Track"}</mwc-button>
+                    <mwc-button @click=${ev => this._track(chore._chore_id)}>${this.config.custom_translation != null && this.config.custom_translation.track != null ? this.config.custom_translation.track : "Track"}</mwc-button>
                   </div>
                 </div>
 
                 `
-              )}` : cardTools.LitHtml`<div class="info flex">${this.config.custom_translation.empty != null ? this.config.custom_translation.empty : "No chores!"}</div>`}
+              )}` : cardTools.LitHtml`<div class="info flex">${this.config.custom_translation != null && this.config.custom_translation.empty != null ? this.config.custom_translation.empty : "No chores!"}</div>`}
             </div>
-            ${this.notShowing.length > 0 ? cardTools.LitHtml`<div class="secondary">${this.config.custom_translation.more != null ? this.config.custom_translation.more.replace("{number}", this.notShowing.length) : "Look in Grocy for " + this.notShowing.length + " more chores..."}</div>`
+            ${this.notShowing.length > 0 ? cardTools.LitHtml`<div class="secondary">${this.config.custom_translation != null && this.config.custom_translation.more != null ? this.config.custom_translation.more.replace("{number}", this.notShowing.length) : "Look in Grocy for " + this.notShowing.length + " more chores..."}</div>`
             : ""}
           </ha-card>`}
       `;
