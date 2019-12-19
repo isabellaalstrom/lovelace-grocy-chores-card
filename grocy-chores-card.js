@@ -148,7 +148,7 @@ customElements.whenDefined('card-tools').then(() => {
     
     set hass(hass) {
       this._hass = hass;
-  
+      
       const entity = hass.states[this.config.entity];
       this.header = this.config.title == null ? "Chores" : this.config.title;
       this.userId = this.config.user_id == null ? 1 : this.config.user_id;
@@ -164,30 +164,33 @@ customElements.whenDefined('card-tools').then(() => {
 
       if(chores != null){
         chores.sort(function(a,b){
-          var aSplitDate = a._next_estimated_execution_time.split(/[- :]/)
-          var bSplitDate = b._next_estimated_execution_time.split(/[- :]/)
-
-          var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
-          var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
-
-          return aParsedDueDate - bParsedDueDate;
+          if (a._next_estimated_execution_time != null && b._next_estimated_execution_time != null) {
+            var aSplitDate = a._next_estimated_execution_time.split(/[- :]/)
+            var bSplitDate = b._next_estimated_execution_time.split(/[- :]/)
+  
+            var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
+            var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
+  
+            return aParsedDueDate - bParsedDueDate;
+          }
+            return;
         })
 
         chores.map(chore =>{
-          var dueInDays = this.calculateDueDate(chore._next_estimated_execution_time);
+          var dueInDays = chore._next_estimated_execution_time ? this.calculateDueDate(chore._next_estimated_execution_time) : 10000;
           chore.dueInDays = dueInDays;
           if(this.show_days != null) {
             if(dueInDays <= this.show_days){
               allChores.push(chore);
             }
             else if(chore._next_estimated_execution_time != null && chore._next_estimated_execution_time.slice(0,4) == "2999") {
-              chore._next_estimated_execution_time = "Whenever";
+              chore._next_estimated_execution_time = "-";
               allChores.unshift(chore)
             }
           }
           else {
-            if(chore._next_estimated_execution_time != null && chore._next_estimated_execution_time.slice(0,4) == "2999"){
-              chore._next_estimated_execution_time = "Whenever";
+            if(chore._next_estimated_execution_time == null || dueInDays == 10000 || chore._next_estimated_execution_time.slice(0,4) == "2999"){
+              chore._next_estimated_execution_time = "-";
               allChores.unshift(chore)
             }
             else
