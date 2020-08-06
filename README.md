@@ -39,19 +39,21 @@ views:
 | show_quantity | number | **Optional** | The number of chores you want to show in the card.
 | show_days | number | **Optional** | `7` to only show chores that's due within 7 days.
 | user_id | number | **Optional** | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
+| custom_translation| string-list | **optional** | List of translations of string values used in the card (see below).
 
 ## Advanced options
-I have added the possibility to translate the english in the card to whatever you like.
+It is possible to translate the following English strings in the card to whatever you like.
 
 ```yaml
 custom_translation:
-  overdue: "Försenad"
-  today: "Idag"
-  due: "Dags"
-  last_tracked: "Senast"
-  track: "Gör nu"
-  empty: "Tom"
-  more: "Det finns {number} fler göromål i Grocy"
+  Overdue: "Försenad"
+  Today: "Idag"
+  Due: "Dags"
+  'Last tracked': "Senast"
+  by: "av"
+  Track: "Gör nu"
+  'No chores': "Tom"
+  'Look in Grocy for {number} more chores': "Det finns {number} fler göromål i Grocy"
 ```
 
 
