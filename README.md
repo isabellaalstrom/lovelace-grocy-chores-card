@@ -40,6 +40,7 @@ views:
 | show_days | number | **Optional** | `7` to only show chores that's due within 7 days.
 | user_id | number | **Optional** | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
 | custom_translation| string-list | **optional** | List of translations of string values used in the card (see below).
+| columns | string-list | **optional** | 
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.

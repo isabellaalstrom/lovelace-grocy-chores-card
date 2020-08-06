@@ -67,27 +67,10 @@ customElements.whenDefined('card-tools').then(() => {
                 ${this.header}
               </div>
             </div>
-            <div>
-              ${this.chores.length > 0 ? cardTools.LitHtml`
-              ${this.chores.map(chore =>
-                cardTools.LitHtml`
-                <div class="info flex">
-                  <div>
-                    ${chore._name}
-                    <div class="secondary">
-                      ${this.translate("Due")}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
-                    </div>
-                    <div class="secondary">
-                      ${this.translate("Last tracked")}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} ${
-                        chore._last_done_by._display_name != null ? this.translate("by") + " " + chore._last_done_by._display_name : ""
-                      }
-                    </div>
-                  </div>
-                  <div>
-                    <mwc-button @click=${ev => this._track(chore._chore_id)}>${this.translate("Track")}</mwc-button>
-                  </div>
-                </div>`
-              )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
+            <div class=${this.columns == 1 ? "" : "container" }>
+              ${this.chores.length > 0
+              ? this._renderChores()
+              : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
             </div>
             ${this.notShowing.length > 0 ? cardTools.LitHtml
               `
@@ -108,12 +91,58 @@ customElements.whenDefined('card-tools').then(() => {
       });
     }
 
+    _renderChores() {
+      if (this.columns == 1) {
+        return cardTools.LitHtml
+        `<div>${this.chores.map(chore => this._renderChore(chore))}</div>`
+      }
+      var maxItemsInColumn = this.chores.length / this.columns;
+      var choreChunks = this._chunkArray(this.chores, maxItemsInColumn);
+      return choreChunks.map(choreChunk => cardTools.LitHtml`<div class="chore-column">${choreChunk.map(chore => this._renderChore(chore))}</div>`)
+
+    }
+
+    _chunkArray(myArray, chunk_size){
+      var index = 0;
+      var arrayLength = myArray.length;
+      var tempArray = [];
+      
+      for (index = 0; index < arrayLength; index += chunk_size) {
+          var myChunk = myArray.slice(index, index+chunk_size);
+          // Do something if you want with the group
+          tempArray.push(myChunk);
+      }
+  
+      return tempArray;
+  }
+
+    _renderChore(chore) { 
+      return cardTools.LitHtml`
+      <div class="chore flex">
+        <div>
+          ${chore._name}
+          <div class="secondary">
+            ${this.translate("Due")}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
+          </div>
+          <div class="secondary">
+            ${this.translate("Last tracked")}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} ${
+              chore._last_done_by._display_name != null ? this.translate("by") + " " + chore._last_done_by._display_name : ""
+            }
+          </div>
+        </div>
+        <div>
+          <mwc-button @click=${ev => this._track(chore._chore_id)}>${this.translate("Track")}</mwc-button>
+        </div>
+      </div>`
+    }
+
     _renderStyle() {
         return cardTools.LitHtml
         `
           <style>
             ha-card {
               padding: 16px;
+              overflow: auto;
             }
             .header {
               padding: 0;
@@ -122,7 +151,13 @@ customElements.whenDefined('card-tools').then(() => {
               color: var(--primary-text-color);
               padding: 4px 0 12px;
             }
-            .info {
+            .container {
+              display: flex;
+            }
+            .chore-column {
+              flex: none;
+            }
+            .chore {
               padding-bottom: 1em;
             }
             .flex {
@@ -151,6 +186,7 @@ customElements.whenDefined('card-tools').then(() => {
       this.userId = this.config.user_id == null ? 1 : this.config.user_id;
 
       this.show_quantity = this.config.show_quantity == null ? null : this.config.show_quantity;
+      this.columns = this.config.columns == null ? 1 : this.config.columns;
       this.show_days = this.config.show_days == null ? null : this.config.show_days;
 
       if (entity.state == 'unknown')
@@ -195,6 +231,8 @@ customElements.whenDefined('card-tools').then(() => {
           }
         })
         
+
+
         if(this.show_quantity != null){
           this.chores = allChores.slice(0, this.show_quantity);
           this.notShowing = allChores.slice(this.show_quantity);
