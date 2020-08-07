@@ -73,7 +73,7 @@ customElements.whenDefined('card-tools').then(() => {
                 cardTools.LitHtml`
                 <div class="info flex">
                   <div>
-                    ${chore._name}
+                    ${chore._filtered_name != null ? chore._filtered_name : chore._name}
                     <div class="secondary">
                       ${this.translate("Due")}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
@@ -153,6 +153,9 @@ customElements.whenDefined('card-tools').then(() => {
       this.show_quantity = this.config.show_quantity == null ? null : this.config.show_quantity;
       this.show_days = this.config.show_days == null ? null : this.config.show_days;
 
+      this.filter = this.config.filter == null ? null : this.config.filter;
+      this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
+
       if (entity.state == 'unknown')
         throw new Error("The Grocy sensor is unknown.");
         
@@ -172,6 +175,20 @@ customElements.whenDefined('card-tools').then(() => {
           }
             return;
         })
+
+        if (this.filter != null) {
+          var filteredChores = [];
+          for (let i = 0; i < chores.length; i++) {
+            if (chores[i]._name.includes(this.filter)) {
+              if (this.remove_filter) {
+                chores[i]._filtered_name = chores[i]._name.replace(this.filter, '');
+                console.log(chores[i]._filtered_name)
+              }
+              filteredChores.push(chores[i]);
+            }
+          }
+          chores = filteredChores;
+        }
 
         chores.map(chore =>{
           var dueInDays = chore._next_estimated_execution_time ? this.calculateDueDate(chore._next_estimated_execution_time) : 10000;
