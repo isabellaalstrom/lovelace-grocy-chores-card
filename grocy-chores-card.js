@@ -79,7 +79,7 @@ customElements.whenDefined('card-tools').then(() => {
                     </div>
                     <div class="secondary">
                       ${this.translate("Last tracked")}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} ${
-                        chore._last_done_by._display_name != null ? this.translate("by") + " " + chore._last_done_by._display_name : ""
+                        chore._last_done_by != null ? this.translate("by") + " " + chore._last_done_by._display_name : ""
                       }
                     </div>
                   </div>
