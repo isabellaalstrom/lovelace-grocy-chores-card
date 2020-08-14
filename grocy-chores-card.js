@@ -77,6 +77,13 @@ customElements.whenDefined('card-tools').then(() => {
                     <div class="secondary">
                       ${this.translate("Due")}: <span class="${chore.next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore.next_estimated_execution_time != null ? this.formatDueDate(chore.next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
+                    ${chore.next_execution_assigned_user != null ? cardTools.LitHtml
+                      `
+                      <div class="secondary">
+                          ${this.translate("Assigned to")}: ${chore.next_execution_assigned_user.display_name}
+                      </div>
+                      `
+                    : ""}
                     <div class="secondary">
                       ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"} ${
                         chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""
@@ -154,6 +161,7 @@ customElements.whenDefined('card-tools').then(() => {
       this.show_days = this.config.show_days == null ? null : this.config.show_days;
 
       this.filter = this.config.filter == null ? null : this.config.filter;
+      this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
       this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
 
       if (entity.state == 'unknown')
@@ -179,11 +187,21 @@ customElements.whenDefined('card-tools').then(() => {
         if (this.filter != null) {
           var filteredChores = [];
           for (let i = 0; i < chores.length; i++) {
-            if (chores[i]._name.includes(this.filter)) {
+            if (chores[i].name.includes(this.filter)) {
               if (this.remove_filter) {
-                chores[i]._filtered_name = chores[i]._name.replace(this.filter, '');
+                chores[i]._filtered_name = chores[i].name.replace(this.filter, '');
                 console.log(chores[i]._filtered_name)
               }
+              filteredChores.push(chores[i]);
+            }
+          }
+          chores = filteredChores;
+        }
+
+        if (this.filter_user != null) {
+          var filteredChores = [];
+          for (let i = 0; i < chores.length; i++) {
+            if (chores[i].next_execution_assigned_user != null && chores[i].next_execution_assigned_user.id == this.filter_user) {
               filteredChores.push(chores[i]);
             }
           }
