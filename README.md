@@ -31,18 +31,21 @@ views:
 
 ## Options
 
-| Name | Type | Default | Description
-| ---- | ---- | ------- | -----------
-| type | string | **Required** | `custom:grocy-chores-card`
-| entity | string | **Required** | The entity id of your Grocy chores sensor.
-| title | string | `"Chores"` | The title of the card.
-| show_quantity | number | **Optional** | The number of chores you want to show in the card.
-| show_days | number | **Optional** | `7` to only show chores that's due within 7 days.
-| user_id | number | **Optional** | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
-| custom_translation | string-list | **optional** | List of translations of string values used in the card (see below).
-| filter | string | **optional** | Only show chores that contains this filter in the name.
-| remove_filter | string | **optional** | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".
-
+| Name | Type | Optional | Default | Description
+| ---- | ---- | -------- | ------- | -----------
+| type | string | **Required** |  | `custom:grocy-chores-card`
+| entity | string | **Required** |  | The entity id of your Grocy chores sensor.
+| title | string | **Optional** | `"Chores"` | The title of the card.
+| show_quantity | number | **Optional** |  | The number of chores you want to show in the card.
+| show_days | number | **Optional** |  | `7` to only show chores that's due within 7 days.
+| user_id | number | **Optional** | `1` | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
+| custom_translation | string-list | **Optional** |  | List of translations of string values used in the card (see below).
+| filter | string | **Optional** |  | Only show chores that contains this filter in the name.
+| remove_filter | bool | **Optional** |  | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".
+| filter_user | number | **Optional** |  | Only show chores assigned to the used with this user_id. Ex: `1`
+| show_assigned | bool | **Optional** | `true` | Show who's assigned to the chore
+| show_last_tracked | bool | **Optional** | `true` | Show when someone last tracked this chore
+| show_last_tracked_by | bool | **Optional** | `true` | Show who last tracked this chore (`show_last_tracked` must be true to show this)
 
 
 ## Advanced options
