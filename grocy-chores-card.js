@@ -57,6 +57,15 @@ customElements.whenDefined('card-tools').then(() => {
     }
   
     render(){
+      if (!this.entity)
+      return html`
+      <hui-warning>
+        ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found",
+          "entity",
+          this.config.entity
+        )}
+      </hui-warning>
+      `
       return cardTools.LitHtml
       `
         ${this._renderStyle()}
@@ -77,11 +86,21 @@ customElements.whenDefined('card-tools').then(() => {
                     <div class="secondary">
                       ${this.translate("Due")}: <span class="${chore.next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore.next_estimated_execution_time != null ? this.formatDueDate(chore.next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
+                    ${this.show_assigned == true && chore.next_execution_assigned_user != null ? cardTools.LitHtml
+                      `
+                      <div class="secondary">
+                          ${this.translate("Assigned to")}: ${chore.next_execution_assigned_user.display_name}
+                      </div>
+                      `
+                    : ""}
+                    ${this.show_last_tracked == true ? cardTools.LitHtml
+                      `
                     <div class="secondary">
-                      ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"} ${
-                        chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""
-                      }
+                      ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"}
+                      ${this.show_last_tracked_by == true && chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""}
                     </div>
+                    `
+                    : ""}
                   </div>
                   <div>
                     <mwc-button @click=${ev => this._track(chore.id)}>${this.translate("Track")}</mwc-button>
@@ -146,7 +165,8 @@ customElements.whenDefined('card-tools').then(() => {
     set hass(hass) {
       this._hass = hass;
       
-      const entity = hass.states[this.config.entity];
+      this.entity = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
+
       this.header = this.config.title == null ? "Chores" : this.config.title;
       this.userId = this.config.user_id == null ? 1 : this.config.user_id;
 
@@ -154,77 +174,96 @@ customElements.whenDefined('card-tools').then(() => {
       this.show_days = this.config.show_days == null ? null : this.config.show_days;
 
       this.filter = this.config.filter == null ? null : this.config.filter;
+      this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
       this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
 
-      if (entity.state == 'unknown')
-        throw new Error("The Grocy sensor is unknown.");
-        
-      var chores = entity.attributes.items;
-      var allChores = []
+      this.show_assigned = this.config.show_assigned == null ? true : this.config.show_assigned;
+      this.show_last_tracked = this.config.show_last_tracked == null ? true : this.config.show_last_tracked;
+      this.show_last_tracked_by = this.config.show_last_tracked_by == null ? true : this.config.show_last_tracked_by;
 
-      if(chores != null){
-        chores.sort(function(a,b){
-          if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
-            var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
-            var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
-  
-            var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
-            var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
-  
-            return aParsedDueDate - bParsedDueDate;
-          }
-            return;
-        })
+      if (this.entity) {
+        if (this.entity.state == 'unknown')
+          throw new Error("The Grocy sensor is unknown.");
 
-        if (this.filter != null) {
-          var filteredChores = [];
-          for (let i = 0; i < chores.length; i++) {
-            if (chores[i]._name.includes(this.filter)) {
-              if (this.remove_filter) {
-                chores[i]._filtered_name = chores[i]._name.replace(this.filter, '');
-                console.log(chores[i]._filtered_name)
+        var chores = this.entity.attributes.items;
+        var allChores = []
+  
+        if(chores != null){
+          chores.sort(function(a,b){
+            if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
+              var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
+              var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
+    
+              var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
+              var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
+    
+              return aParsedDueDate - bParsedDueDate;
+            }
+              return;
+          })
+  
+          if (this.filter != null) {
+            var filteredChores = [];
+            for (let i = 0; i < chores.length; i++) {
+              if (chores[i].name.includes(this.filter)) {
+                if (this.remove_filter) {
+                  chores[i]._filtered_name = chores[i].name.replace(this.filter, '');
+                  // console.log(chores[i]._filtered_name)
+                }
+                filteredChores.push(chores[i]);
               }
-              filteredChores.push(chores[i]);
             }
+            chores = filteredChores;
           }
-          chores = filteredChores;
+  
+          if (this.filter_user != null) {
+            var filteredChores = [];
+            for (let i = 0; i < chores.length; i++) {
+              if (chores[i].next_execution_assigned_user != null && chores[i].next_execution_assigned_user.id == this.filter_user) {
+                filteredChores.push(chores[i]);
+              }
+            }
+            chores = filteredChores;
+          }
+  
+          chores.map(chore =>{
+            var dueInDays = chore.next_estimated_execution_time ? this.calculateDueDate(chore.next_estimated_execution_time) : 10000;
+            chore.dueInDays = dueInDays;
+            if(this.show_days != null) {
+              if(dueInDays <= this.show_days){
+                allChores.push(chore);
+              }
+              else if(chore.next_estimated_execution_time != null && chore.next_estimated_execution_time.slice(0,4) == "2999") {
+                chore.next_estimated_execution_time = "-";
+                allChores.unshift(chore)
+              }
+            }
+            else {
+              if(chore.next_estimated_execution_time == null || dueInDays == 10000 || chore.next_estimated_execution_time.slice(0,4) == "2999"){
+                chore.next_estimated_execution_time = "-";
+                allChores.unshift(chore)
+              }
+              else
+                allChores.push(chore);
+            }
+          })
+          
+          if(this.show_quantity != null){
+            this.chores = allChores.slice(0, this.show_quantity);
+            this.notShowing = allChores.slice(this.show_quantity);
+          }
+          else{
+            this.chores = allChores;
+            this.notShowing = 0;
+          }
         }
-
-        chores.map(chore =>{
-          var dueInDays = chore.next_estimated_execution_time ? this.calculateDueDate(chore.next_estimated_execution_time) : 10000;
-          chore.dueInDays = dueInDays;
-          if(this.show_days != null) {
-            if(dueInDays <= this.show_days){
-              allChores.push(chore);
-            }
-            else if(chore.next_estimated_execution_time != null && chore.next_estimated_execution_time.slice(0,4) == "2999") {
-              chore.next_estimated_execution_time = "-";
-              allChores.unshift(chore)
-            }
-          }
-          else {
-            if(chore.next_estimated_execution_time == null || dueInDays == 10000 || chore.next_estimated_execution_time.slice(0,4) == "2999"){
-              chore.next_estimated_execution_time = "-";
-              allChores.unshift(chore)
-            }
-            else
-              allChores.push(chore);
-          }
-        })
-        
-        if(this.show_quantity != null){
-          this.chores = allChores.slice(0, this.show_quantity);
-          this.notShowing = allChores.slice(this.show_quantity);
-        }
-        else{
+        else
           this.chores = allChores;
-          this.notShowing = 0;
-        }
+        
+        this.state = this.entity.state
       }
-      else
-        this.chores = allChores;
       
-      this.state = entity.state
+
       this.requestUpdate();
     }
     
