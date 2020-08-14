@@ -77,18 +77,21 @@ customElements.whenDefined('card-tools').then(() => {
                     <div class="secondary">
                       ${this.translate("Due")}: <span class="${chore.next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore.next_estimated_execution_time != null ? this.formatDueDate(chore.next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
-                    ${chore.next_execution_assigned_user != null ? cardTools.LitHtml
+                    ${this.show_assigned == true && chore.next_execution_assigned_user != null ? cardTools.LitHtml
                       `
                       <div class="secondary">
                           ${this.translate("Assigned to")}: ${chore.next_execution_assigned_user.display_name}
                       </div>
                       `
                     : ""}
+                    ${this.show_last_tracked == true ? cardTools.LitHtml
+                      `
                     <div class="secondary">
-                      ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"} ${
-                        chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""
-                      }
+                      ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"}
+                      ${this.show_last_tracked_by == true && chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""}
                     </div>
+                    `
+                    : ""}
                   </div>
                   <div>
                     <mwc-button @click=${ev => this._track(chore.id)}>${this.translate("Track")}</mwc-button>
@@ -163,6 +166,10 @@ customElements.whenDefined('card-tools').then(() => {
       this.filter = this.config.filter == null ? null : this.config.filter;
       this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
       this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
+
+      this.show_assigned = this.config.show_assigned == null ? true : this.config.show_assigned;
+      this.show_last_tracked = this.config.show_last_tracked == null ? true : this.config.show_last_tracked;
+      this.show_last_tracked_by = this.config.show_last_tracked_by == null ? true : this.config.show_last_tracked_by;
 
       if (entity.state == 'unknown')
         throw new Error("The Grocy sensor is unknown.");
