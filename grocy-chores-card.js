@@ -73,18 +73,18 @@ customElements.whenDefined('card-tools').then(() => {
                 cardTools.LitHtml`
                 <div class="info flex">
                   <div>
-                    ${chore._filtered_name != null ? chore._filtered_name : chore._name}
+                    ${chore._filtered_name != null ? chore._filtered_name : chore.name}
                     <div class="secondary">
-                      ${this.translate("Due")}: <span class="${chore._next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore._next_estimated_execution_time != null ? this.formatDueDate(chore._next_estimated_execution_time, chore.dueInDays) : "-"}</span>
+                      ${this.translate("Due")}: <span class="${chore.next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore.next_estimated_execution_time != null ? this.formatDueDate(chore.next_estimated_execution_time, chore.dueInDays) : "-"}</span>
                     </div>
                     <div class="secondary">
-                      ${this.translate("Last tracked")}: ${chore._last_tracked_time != null ? chore._last_tracked_time.substr(0, 10) : "-"} ${
-                        chore._last_done_by != null ? this.translate("by") + " " + chore._last_done_by._display_name : ""
+                      ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"} ${
+                        chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""
                       }
                     </div>
                   </div>
                   <div>
-                    <mwc-button @click=${ev => this._track(chore._chore_id)}>${this.translate("Track")}</mwc-button>
+                    <mwc-button @click=${ev => this._track(chore.id)}>${this.translate("Track")}</mwc-button>
                   </div>
                 </div>`
               )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
@@ -164,9 +164,9 @@ customElements.whenDefined('card-tools').then(() => {
 
       if(chores != null){
         chores.sort(function(a,b){
-          if (a._next_estimated_execution_time != null && b._next_estimated_execution_time != null) {
-            var aSplitDate = a._next_estimated_execution_time.split(/[- :T]/)
-            var bSplitDate = b._next_estimated_execution_time.split(/[- :T]/)
+          if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
+            var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
+            var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
   
             var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
             var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
@@ -191,20 +191,20 @@ customElements.whenDefined('card-tools').then(() => {
         }
 
         chores.map(chore =>{
-          var dueInDays = chore._next_estimated_execution_time ? this.calculateDueDate(chore._next_estimated_execution_time) : 10000;
+          var dueInDays = chore.next_estimated_execution_time ? this.calculateDueDate(chore.next_estimated_execution_time) : 10000;
           chore.dueInDays = dueInDays;
           if(this.show_days != null) {
             if(dueInDays <= this.show_days){
               allChores.push(chore);
             }
-            else if(chore._next_estimated_execution_time != null && chore._next_estimated_execution_time.slice(0,4) == "2999") {
-              chore._next_estimated_execution_time = "-";
+            else if(chore.next_estimated_execution_time != null && chore.next_estimated_execution_time.slice(0,4) == "2999") {
+              chore.next_estimated_execution_time = "-";
               allChores.unshift(chore)
             }
           }
           else {
-            if(chore._next_estimated_execution_time == null || dueInDays == 10000 || chore._next_estimated_execution_time.slice(0,4) == "2999"){
-              chore._next_estimated_execution_time = "-";
+            if(chore.next_estimated_execution_time == null || dueInDays == 10000 || chore.next_estimated_execution_time.slice(0,4) == "2999"){
+              chore.next_estimated_execution_time = "-";
               allChores.unshift(chore)
             }
             else
