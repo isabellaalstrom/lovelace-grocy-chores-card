@@ -122,7 +122,6 @@ customElements.whenDefined('card-tools').then(() => {
     _track(choreId){
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
-        tracked_time: new Date().toISOString(),
         done_by: this.userId
       });
     }
