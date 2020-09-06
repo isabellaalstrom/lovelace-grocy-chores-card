@@ -184,7 +184,7 @@ customElements.whenDefined('card-tools').then(() => {
         if (this.entity.state == 'unknown')
           throw new Error("The Grocy sensor is unknown.");
 
-        var chores = this.entity.attributes.items;
+        var chores = this.entity.attributes.chores;
         var allChores = []
   
         if(chores != null){
