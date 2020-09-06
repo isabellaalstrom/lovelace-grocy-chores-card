@@ -103,7 +103,7 @@ customElements.whenDefined('card-tools').then(() => {
                     : ""}
                   </div>
                   <div>
-                    <mwc-button @click=${ev => this._track(chore.id)}>${this.translate("Track")}</mwc-button>
+                    <mwc-button @click=${ev => this._track(chore.id, chore.next_execution_assigned_user.id)}>${this.translate("Track")}</mwc-button>
                   </div>
                 </div>`
               )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
@@ -119,10 +119,10 @@ customElements.whenDefined('card-tools').then(() => {
       `;
     } 
 
-    _track(choreId){
+    _track(choreId, userId){
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
-        done_by: this.userId
+        done_by: userId
       });
     }
 
