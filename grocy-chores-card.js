@@ -103,7 +103,7 @@ customElements.whenDefined('card-tools').then(() => {
                     : ""}
                   </div>
                   <div>
-                    <mwc-button @click=${ev => this._track(chore.id, chore.next_execution_assigned_user.id)}>${this.translate("Track")}</mwc-button>
+                    <mwc-button @click=${ev => this._track(chore.id, chore.next_execution_assigned_user == null ? 1 : chore.next_execution_assigned_user.id )}>${this.translate("Track")}</mwc-button>
                   </div>
                 </div>`
               )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
@@ -119,7 +119,7 @@ customElements.whenDefined('card-tools').then(() => {
       `;
     } 
 
-    _track(choreId, userId = 1){
+    _track(choreId, userId){
       if (this.config.user_id != null)
         userId = this.config.user_id;
       
