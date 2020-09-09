@@ -119,11 +119,9 @@ customElements.whenDefined('card-tools').then(() => {
       `;
     } 
 
-    _track(choreId, userId){
+    _track(choreId, userId = 1){
       if (this.config.user_id != null)
         userId = this.config.user_id;
-      else if (userId == null)
-        userId = 1;
       
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
