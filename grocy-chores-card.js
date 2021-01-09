@@ -58,7 +58,7 @@ customElements.whenDefined('card-tools').then(() => {
   
     render(){
       if (!this.entity)
-      return html`
+      return cardTools.LitHtml`
       <hui-warning>
         ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found",
           "entity",
@@ -102,13 +102,18 @@ customElements.whenDefined('card-tools').then(() => {
                     `
                     : ""}
                   </div>
+                  ${this.show_track_button == true ? cardTools.LitHtml
+                  `
                   <div>
-                    <mwc-button @click=${ev => this._track(chore.id, chore.next_execution_assigned_user == null ? 1 : chore.next_execution_assigned_user.id )}>${this.translate("Track")}</mwc-button>
-                  </div>
+                    <mwc-button @click=${ev => this._track(chore.id)}>${this.translate("Track")}</mwc-button>
+                  </div>     
+                  `
+                  : ""}
+
                 </div>`
               )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
             </div>
-            ${this.notShowing.length > 0 ? cardTools.LitHtml
+            ${this.notShowing.length > 0 && this.notShowing.length != null ? cardTools.LitHtml
               `
               <div class="secondary">
                   ${this.translate("Look in Grocy for {number} more chores").replace("{number}", this.notShowing.length)}
@@ -119,13 +124,10 @@ customElements.whenDefined('card-tools').then(() => {
       `;
     } 
 
-    _track(choreId, userId){
-      if (this.config.user_id != null)
-        userId = this.config.user_id;
-      
+    _track(choreId){
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
-        done_by: userId
+        done_by: this.userId
       });
     }
 
@@ -170,9 +172,10 @@ customElements.whenDefined('card-tools').then(() => {
       this.entity = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
 
       this.header = this.config.title == null ? "Chores" : this.config.title;
+      this.userId = this.config.user_id == null ? 1 : this.config.user_id;
 
-      this.show_quantity = this.config.show_quantity == null ? null : this.config.show_quantity;
-      this.show_days = this.config.show_days == null ? null : this.config.show_days;
+      this.show_quantity = this.config.show_quantity == null || this.config.show_quantity == 0 || this.config.show_quantity == '' ? null : this.config.show_quantity;
+      this.show_days = this.config.show_days == null || this.config.show_days == 0 || this.config.show_days == '' ? null : this.config.show_days;
 
       this.filter = this.config.filter == null ? null : this.config.filter;
       this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
@@ -181,6 +184,8 @@ customElements.whenDefined('card-tools').then(() => {
       this.show_assigned = this.config.show_assigned == null ? true : this.config.show_assigned;
       this.show_last_tracked = this.config.show_last_tracked == null ? true : this.config.show_last_tracked;
       this.show_last_tracked_by = this.config.show_last_tracked_by == null ? true : this.config.show_last_tracked_by;
+
+      this.show_track_button = this.config.show_track_button == null ? true : this.config.show_track_button;
 
       if (this.entity) {
         if (this.entity.state == 'unknown')
