@@ -2,7 +2,14 @@ customElements.whenDefined('card-tools').then(() => {
   let cardTools = customElements.get('card-tools');
     
   class GrocyChoresCard extends cardTools.LitElement {
-    
+    static getConfigElement() {
+      return document.createElement("content-card-editor");
+    }
+  
+    static getStubConfig() {
+      return { entity: "sensor.grocy_chores", title: null, show_quantity: null, show_days: null, show_assigned: true, show_last_tracked: true, show_last_tracked_by: true, show_track_button: true }
+    }
+
     setConfig(config) {
       if (!config.entity) {
         throw new Error('Please define entity');
@@ -280,6 +287,15 @@ customElements.whenDefined('card-tools').then(() => {
   }
   
   customElements.define('grocy-chores-card', GrocyChoresCard);
+
+  // Configure the preview in the Lovelace card picker
+  window.customCards = window.customCards || [];
+  window.customCards.push({
+    type: 'grocy-chores-card',
+    name: 'Grocy Chores Card',
+    preview: false,
+    description: 'A card used to display chores information from the Grocy custom component.',
+    });
   });
   
   window.setTimeout(() => {
