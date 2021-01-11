@@ -46,7 +46,7 @@ views:
 | show_assigned | bool | **Optional** | `true` | Show who's assigned to the chore
 | show_last_tracked | bool | **Optional** | `true` | Show when someone last tracked this chore
 | show_last_tracked_by | bool | **Optional** | `true` | Show who last tracked this chore (`show_last_tracked` must be true to show this)
-
+| show_track_button | bool | **Optional** | `true` | Show track (complete) button
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
