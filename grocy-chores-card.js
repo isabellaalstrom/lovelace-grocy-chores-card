@@ -182,7 +182,7 @@ customElements.whenDefined('card-tools').then(() => {
       this.userId = this.config.user_id == null ? 1 : this.config.user_id;
 
       this.show_quantity = this.config.show_quantity == null || this.config.show_quantity == 0 || this.config.show_quantity == '' ? null : this.config.show_quantity;
-      this.show_days = this.config.show_days == null || this.config.show_days == 0 || this.config.show_days == '' ? null : this.config.show_days;
+      this.show_days = this.config.show_days === null || this.config.show_days === '' ? null : this.config.show_days;
 
       this.filter = this.config.filter == null ? null : this.config.filter;
       this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
@@ -242,7 +242,7 @@ customElements.whenDefined('card-tools').then(() => {
           chores.map(chore =>{
             var dueInDays = chore.next_estimated_execution_time ? this.calculateDueDate(chore.next_estimated_execution_time) : 10000;
             chore.dueInDays = dueInDays;
-            if(this.show_days != null) {
+            if(this.show_days !== null) {
               if(dueInDays <= this.show_days){
                 allChores.push(chore);
               }
