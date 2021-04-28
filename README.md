@@ -38,7 +38,7 @@ views:
 | title | string | **Optional** | `"Chores"` | The title of the card.
 | show_quantity | number | **Optional** |  | The number of chores you want to show in the card.
 | show_days | number | **Optional** |  | `7` to only show chores that's due within 7 days.
-| user_id | number | **Optional** | `1` | Id of the Grocy user performing the tasks. Default if not specified is `1`, which should be the admin user in Grocy.
+| user_id | number | **Optional** | `1` | Id of the Grocy user performing the tasks. Default if not specified is `1`. See further instructions [here](#user_id).
 | custom_translation | string-list | **Optional** |  | List of translations of string values used in the card (see below).
 | filter | string | **Optional** |  | Only show chores that contains this filter in the name.
 | remove_filter | bool | **Optional** |  | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".
@@ -63,6 +63,16 @@ custom_translation:
   'Look in Grocy for {number} more chores': "Det finns {number} fler göromål i Grocy"
 ```
 
+## <a name="user_id"></a> How to get the correct user id?
+Currently, [this issue in Grocy](https://github.com/grocy/grocy/issues/1260) results in only being able to track chores for the user id that created the api key used in the integration in Home Assistant. The issue is fixed but not yet released. In the meantime, follow these instructions to get the correct user id to be able to track chores from the card:
+
+1. Login to Grocy. Go to `http://yourgrocyip:port/manageapikeys`
+2. Note which user has created the api key used with the HA integration.
+3. Go to `http://yourgrocyip:port/api/users`
+4. Find the user that corresponds to the user who created the api key in step 2.
+5. Note the id for that user. If the id is not `1` you need to specify `user_id` to that user id in the cards configuration to be able to track chores.
+
+---
 
 Like my work and want to say thanks? Do it here:
 
