@@ -1,7 +1,6 @@
-customElements.whenDefined('card-tools').then(() => {
-  let cardTools = customElements.get('card-tools');
-    
-  class GrocyChoresCard extends cardTools.LitElement {
+import { html, LitElement } from "https://unpkg.com/lit?module";
+
+  class GrocyChoresCard extends LitElement {
     static getConfigElement() {
       return document.createElement("content-card-editor");
     }
@@ -65,7 +64,7 @@ customElements.whenDefined('card-tools').then(() => {
   
     render(){
       if (!this.entities)
-      return cardTools.LitHtml`
+      return html`
       <hui-warning>
         ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found",
           "entity",
@@ -73,54 +72,69 @@ customElements.whenDefined('card-tools').then(() => {
         )}
       </hui-warning>
       `
-      return cardTools.LitHtml
+      return html
       `
         ${this._renderStyle()}
-        ${cardTools.LitHtml
+        ${html
           `<ha-card>
-            <div class="header">
+            <h1 class="card-header">
               <div class="name">
                 ${this.header}
               </div>
-            </div>
-            <div>
-              ${this.items.length > 0 ? cardTools.LitHtml`
-              ${this.items.map(item =>
-                cardTools.LitHtml`
-                <div class="info flex">
-                  <div>
-                    ${item._filtered_name != null ? item._filtered_name : item.name}
-                    <div class="secondary">
-                      ${this.translate("Due")}: <span class="${item.next_estimated_execution_time != null ? this.checkDueClass(item.dueInDays) : ""}">${item.next_estimated_execution_time != null ? this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) : "-"}</span>
-                    </div>
-                    ${this.show_assigned == true && item.next_execution_assigned_user != null ? cardTools.LitHtml
-                      `
+            </h1>
+            <div class="card-content">
+              ${this.items.length > 0 ? html`
+                ${this.items.map(item =>
+                  html`
+                  <div class="info flex">
+                    <div>
+                      ${item._filtered_name != null ? item._filtered_name : item.name}
                       <div class="secondary">
-                          ${this.translate("Assigned to")}: ${item.next_execution_assigned_user.display_name}
+                        ${this.translate("Due")}: <span class="${item.next_estimated_execution_time != null ? this.checkDueClass(item.dueInDays) : ""}">${item.next_estimated_execution_time != null ? this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) : "-"}</span>
                       </div>
+                      ${this.show_assigned == true && item.next_execution_assigned_user != null ? html
+                        `
+                        <div class="secondary">
+                            ${this.translate("Assigned to")}: ${item.next_execution_assigned_user.display_name}
+                        </div>
+                        `
+                      : ""}
+                      ${this.show_last_tracked == true ? html
                       `
-                    : ""}
-                    ${this.show_last_tracked == true ? cardTools.LitHtml
+                        ${item.type == "chore" ? html
+                        `
+                          <div class="secondary">
+                          ${this.translate("Last tracked")}: ${item.last_tracked_time != null ? item.last_tracked_time.substr(0, 10) : "-"}
+                          ${this.show_last_tracked_by == true && item.last_done_by != null ? this.translate("by") + " " + item.last_done_by.display_name : ""}
+                          </div>
+                        `
+                        : ""
+                        }
+
                       `
-                    <div class="secondary">
-                      ${this.translate("Last tracked")}: ${item.last_tracked_time != null ? item.last_tracked_time.substr(0, 10) : "-"}
-                      ${this.show_last_tracked_by == true && item.last_done_by != null ? this.translate("by") + " " + item.last_done_by.display_name : ""}
+                      : ""}
                     </div>
+                    ${this.show_track_button == true ? html
+                    `
+                      ${item.type == "chore" ? html
+                      `
+                      <div>
+                        <mwc-button @click=${ev => this._trackChore(item.id)}>${this.translate("Track")}</mwc-button>
+                      </div>     
+                      `
+                      : html
+                      `
+                      <div>
+                        <mwc-button @click=${ev => this._trackTask(item.id)}>${this.translate("Track")}</mwc-button>
+                      </div>
+                      `}
                     `
                     : ""}
-                  </div>
-                  ${this.show_track_button == true ? cardTools.LitHtml
-                  `
-                  <div>
-                    <mwc-button @click=${ev => this._track(item.id)}>${this.translate("Track")}</mwc-button>
-                  </div>     
-                  `
-                  : ""}
 
-                </div>`
-              )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No todos")}!</div>`}
+                  </div>`
+              )}` : html`<div class="info flex">${this.translate("No todos")}!</div>`}
             </div>
-            ${this.notShowing.length > 0 && this.notShowing.length != null ? cardTools.LitHtml
+            ${this.notShowing.length > 0 && this.notShowing.length != null ? html
               `
               <div class="secondary">
                   ${this.translate("Look in Grocy for {number} more items").replace("{number}", this.notShowing.length)}
@@ -131,27 +145,23 @@ customElements.whenDefined('card-tools').then(() => {
       `;
     } 
 
-    _track(choreId){
+    _trackChore(choreId){
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
         done_by: this.userId
       });
     }
 
+    _trackTask(taskId){
+      this._hass.callService("grocy", "complete_task", {
+        task_id: taskId
+      });
+    }
+
     _renderStyle() {
-        return cardTools.LitHtml
+        return html
         `
           <style>
-            ha-card {
-              padding: 16px;
-            }
-            .header {
-              padding: 0;
-              @apply --paper-font-headline;
-              line-height: 40px;
-              color: var(--primary-text-color);
-              padding: 4px 0 12px;
-            }
             .info {
               padding-bottom: 1em;
             }
@@ -171,14 +181,6 @@ customElements.whenDefined('card-tools').then(() => {
           }
           </style>
         `;
-      }
-    
-      _setupTasks(){
-
-      }
-
-      _setupChores(){
-
       }
 
       _configSetup(){
@@ -216,7 +218,7 @@ customElements.whenDefined('card-tools').then(() => {
 
       if (this.entities) {
         var allItems = [];
-        var finishedItemsList = [];
+        var finalItemsList = [];
 
         for (var i = 0; i < this.entities.length; ++i) {
           var items;
@@ -228,9 +230,15 @@ customElements.whenDefined('card-tools').then(() => {
           else {
             if (this.entities[i].attributes.chores != undefined || this.entities[i].attributes.chores != null) {
               items = this.entities[i].attributes.chores;
+              items.map(item =>{
+                item.type = "chore"
+              });
             }
             else {
               items = this.entities[i].attributes.tasks;
+              items.map(item =>{
+                item.type = "task"
+              });
             }
             if (items != null){
               if (this.filter != null) {
@@ -268,7 +276,6 @@ customElements.whenDefined('card-tools').then(() => {
           }
         });
 
-        console.log(allItems);
         allItems.sort(function(a,b){
           if (a.next_estimated_execution_time == null || a.next_estimated_execution_time == undefined || a.next_estimated_execution_time == "-")
           {
@@ -295,33 +302,32 @@ customElements.whenDefined('card-tools').then(() => {
           item.dueInDays = dueInDays;
           if(this.show_days != null) {
             if(dueInDays <= this.show_days){
-              finishedItemsList.push(item);
+              finalItemsList.push(item);
             }
             else if(item.next_estimated_execution_time != null && item.next_estimated_execution_time.slice(0,4) == "2999") {
               item.next_estimated_execution_time = "-";
-              finishedItemsList.unshift(item)
+              finalItemsList.unshift(item)
             }
           }
           else {
             if(item.next_estimated_execution_time == null || dueInDays == 10000 || item.next_estimated_execution_time.slice(0,4) == "2999"){
               item.next_estimated_execution_time = "-";
-              finishedItemsList.unshift(item)
+              finalItemsList.unshift(item)
             }
             else
-            finishedItemsList.push(item);
+            finalItemsList.push(item);
           }
         })
         
         if(this.show_quantity != null) {
-          this.items = finishedItemsList.slice(0, this.show_quantity);
-          this.notShowing = finishedItemsList.slice(this.show_quantity);
+          this.items = finalItemsList.slice(0, this.show_quantity);
+          this.notShowing = finalItemsList.slice(this.show_quantity);
         }
         else {
-          this.items = finishedItemsList;
+          this.items = finalItemsList;
           this.notShowing = 0;
         }
       }
-
       this.requestUpdate();
     }
     
@@ -341,11 +347,5 @@ customElements.whenDefined('card-tools').then(() => {
     preview: false,
     description: 'A card used to display chores information from the Grocy custom component.',
     });
-  });
-  
-  window.setTimeout(() => {
-    if(customElements.get('card-tools')) return;
-    customElements.define('grocy-chores-card', class extends HTMLElement{
-      setConfig() { throw new Error("Can't find card-tools. See https://github.com/thomasloven/lovelace-card-tools");}
-    });
-  }, 2000);
+
+  customElements.define("grocy-chores-card", GrocyChoresCard);
