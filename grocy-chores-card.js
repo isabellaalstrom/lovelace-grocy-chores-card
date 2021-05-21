@@ -274,6 +274,9 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
           }
         }
         allItems = allItems[0].concat(allItems[1])
+        allItems = allItems.filter(function(x) {
+          return x !== undefined;
+        });
         allItems.map(item =>{
           if(item.next_estimated_execution_time == null && item.due_date != null)
           {
