@@ -64,7 +64,7 @@ customElements.whenDefined('card-tools').then(() => {
     }
   
     render(){
-      if (!this.entity)
+      if (!this.entities)
       return cardTools.LitHtml`
       <hui-warning>
         ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found",
@@ -84,27 +84,27 @@ customElements.whenDefined('card-tools').then(() => {
               </div>
             </div>
             <div>
-              ${this.chores.length > 0 ? cardTools.LitHtml`
-              ${this.chores.map(chore =>
+              ${this.items.length > 0 ? cardTools.LitHtml`
+              ${this.items.map(item =>
                 cardTools.LitHtml`
                 <div class="info flex">
                   <div>
-                    ${chore._filtered_name != null ? chore._filtered_name : chore.name}
+                    ${item._filtered_name != null ? item._filtered_name : item.name}
                     <div class="secondary">
-                      ${this.translate("Due")}: <span class="${chore.next_estimated_execution_time != null ? this.checkDueClass(chore.dueInDays) : ""}">${chore.next_estimated_execution_time != null ? this.formatDueDate(chore.next_estimated_execution_time, chore.dueInDays) : "-"}</span>
+                      ${this.translate("Due")}: <span class="${item.next_estimated_execution_time != null ? this.checkDueClass(item.dueInDays) : ""}">${item.next_estimated_execution_time != null ? this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) : "-"}</span>
                     </div>
-                    ${this.show_assigned == true && chore.next_execution_assigned_user != null ? cardTools.LitHtml
+                    ${this.show_assigned == true && item.next_execution_assigned_user != null ? cardTools.LitHtml
                       `
                       <div class="secondary">
-                          ${this.translate("Assigned to")}: ${chore.next_execution_assigned_user.display_name}
+                          ${this.translate("Assigned to")}: ${item.next_execution_assigned_user.display_name}
                       </div>
                       `
                     : ""}
                     ${this.show_last_tracked == true ? cardTools.LitHtml
                       `
                     <div class="secondary">
-                      ${this.translate("Last tracked")}: ${chore.last_tracked_time != null ? chore.last_tracked_time.substr(0, 10) : "-"}
-                      ${this.show_last_tracked_by == true && chore.last_done_by != null ? this.translate("by") + " " + chore.last_done_by.display_name : ""}
+                      ${this.translate("Last tracked")}: ${item.last_tracked_time != null ? item.last_tracked_time.substr(0, 10) : "-"}
+                      ${this.show_last_tracked_by == true && item.last_done_by != null ? this.translate("by") + " " + item.last_done_by.display_name : ""}
                     </div>
                     `
                     : ""}
@@ -112,18 +112,18 @@ customElements.whenDefined('card-tools').then(() => {
                   ${this.show_track_button == true ? cardTools.LitHtml
                   `
                   <div>
-                    <mwc-button @click=${ev => this._track(chore.id)}>${this.translate("Track")}</mwc-button>
+                    <mwc-button @click=${ev => this._track(item.id)}>${this.translate("Track")}</mwc-button>
                   </div>     
                   `
                   : ""}
 
                 </div>`
-              )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No chores")}!</div>`}
+              )}` : cardTools.LitHtml`<div class="info flex">${this.translate("No todos")}!</div>`}
             </div>
             ${this.notShowing.length > 0 && this.notShowing.length != null ? cardTools.LitHtml
               `
               <div class="secondary">
-                  ${this.translate("Look in Grocy for {number} more chores").replace("{number}", this.notShowing.length)}
+                  ${this.translate("Look in Grocy for {number} more items").replace("{number}", this.notShowing.length)}
               </div>
               `
             : ""}
@@ -173,109 +173,146 @@ customElements.whenDefined('card-tools').then(() => {
         `;
       }
     
+      _setupTasks(){
+
+      }
+
+      _setupChores(){
+
+      }
+
+      _configSetup(){
+        this.userId = this.config.user_id == null ? 1 : this.config.user_id;
+        this.filter = this.config.filter == null ? null : this.config.filter;
+        this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
+        this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
+        this.show_quantity = this.config.show_quantity == null || this.config.show_quantity == 0 || this.config.show_quantity == '' ? null : this.config.show_quantity;
+        this.show_days = this.config.show_days == null || this.config.show_days == 0 || this.config.show_days == '' ? null : this.config.show_days;
+        this.show_assigned = this.config.show_assigned == null ? true : this.config.show_assigned;
+        this.show_track_button = this.config.show_track_button == null ? true : this.config.show_track_button;
+        this.show_last_tracked = this.config.show_last_tracked == null ? true : this.config.show_last_tracked;
+        this.show_last_tracked_by = this.config.show_last_tracked_by == null ? true : this.config.show_last_tracked_by;
+        this.filter_category = this.config.filter_category == null ? null : this.config.filter_category;
+        this.show_category = this.config.show_category == null ? true : this.config.show_category;
+        this.show_description = this.config.show_description == null ? true : this.config.show_description;
+      }
+
     set hass(hass) {
       this._hass = hass;
+      this.entities = new Array();
+      if(Array.isArray(this.config.entity))
+      {      
+        for (var i = 0; i < this.config.entity.length; ++i) {
+          this.entities[i] = this.config.entity[i] in hass.states ? hass.states[this.config.entity[i]] : null;
+        }
+      }
+      else {
+        this.entities[0] = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
+      }
+
+      this.header = this.config.title == null ? "Todo" : this.config.title;
       
-      this.entity = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
+      this._configSetup();
 
-      this.header = this.config.title == null ? "Chores" : this.config.title;
-      this.userId = this.config.user_id == null ? 1 : this.config.user_id;
+      if (this.entities) {
+        var allItems = [];
+        var finishedItemsList = [];
 
-      this.show_quantity = this.config.show_quantity == null || this.config.show_quantity == 0 || this.config.show_quantity == '' ? null : this.config.show_quantity;
-      this.show_days = this.config.show_days === null || this.config.show_days === '' ? null : this.config.show_days;
-
-      this.filter = this.config.filter == null ? null : this.config.filter;
-      this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
-      this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
-
-      this.show_assigned = this.config.show_assigned == null ? true : this.config.show_assigned;
-      this.show_last_tracked = this.config.show_last_tracked == null ? true : this.config.show_last_tracked;
-      this.show_last_tracked_by = this.config.show_last_tracked_by == null ? true : this.config.show_last_tracked_by;
-
-      this.show_track_button = this.config.show_track_button == null ? true : this.config.show_track_button;
-
-      if (this.entity) {
-        if (this.entity.state == 'unknown')
-          throw new Error("The Grocy sensor is unknown.");
-
-        var chores = this.entity.attributes.chores;
-        var allChores = []
-  
-        if(chores != null){
-          chores.sort(function(a,b){
-            if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
-              var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
-              var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
-    
-              var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
-              var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
-    
-              return aParsedDueDate - bParsedDueDate;
-            }
-              return;
-          })
-  
-          if (this.filter != null) {
-            var filteredChores = [];
-            for (let i = 0; i < chores.length; i++) {
-              if (chores[i].name.includes(this.filter)) {
-                if (this.remove_filter) {
-                  chores[i]._filtered_name = chores[i].name.replace(this.filter, '');
-                  // console.log(chores[i]._filtered_name)
-                }
-                filteredChores.push(chores[i]);
-              }
-            }
-            chores = filteredChores;
+        for (var i = 0; i < this.entities.length; ++i) {
+          var items;
+          if (this.entities[i].state == 'unknown')
+          {
+            console.error("The Grocy sensor " + this.entities[i].entity_id + " is unknown.");
+            return;
           }
-  
-          if (this.filter_user != null) {
-            var filteredChores = [];
-            for (let i = 0; i < chores.length; i++) {
-              if (chores[i].next_execution_assigned_user != null && chores[i].next_execution_assigned_user.id == this.filter_user) {
-                filteredChores.push(chores[i]);
-              }
-            }
-            chores = filteredChores;
-          }
-  
-          chores.map(chore =>{
-            var dueInDays = chore.next_estimated_execution_time ? this.calculateDueDate(chore.next_estimated_execution_time) : 10000;
-            chore.dueInDays = dueInDays;
-            if(this.show_days !== null) {
-              if(dueInDays <= this.show_days){
-                allChores.push(chore);
-              }
-              else if(chore.next_estimated_execution_time != null && chore.next_estimated_execution_time.slice(0,4) == "2999") {
-                chore.next_estimated_execution_time = "-";
-                allChores.unshift(chore)
-              }
+          else {
+            if (this.entities[i].attributes.chores != undefined || this.entities[i].attributes.chores != null) {
+              items = this.entities[i].attributes.chores;
             }
             else {
-              if(chore.next_estimated_execution_time == null || dueInDays == 10000 || chore.next_estimated_execution_time.slice(0,4) == "2999"){
-                chore.next_estimated_execution_time = "-";
-                allChores.unshift(chore)
-              }
-              else
-                allChores.push(chore);
+              items = this.entities[i].attributes.tasks;
             }
-          })
-          
-          if(this.show_quantity != null){
-            this.chores = allChores.slice(0, this.show_quantity);
-            this.notShowing = allChores.slice(this.show_quantity);
-          }
-          else{
-            this.chores = allChores;
-            this.notShowing = 0;
+            if (items != null){
+              if (this.filter != null) {
+                var filteredItems = [];
+                for (let i = 0; i < items.length; i++) {
+                  if (items[i].name.includes(this.filter)) {
+                    if (this.remove_filter) {
+                      items[i]._filtered_name = items[i].name.replace(this.filter, '');
+                    }
+                    filteredItems.push(items[i]);
+                  }
+                }
+                items = filteredItems;
+              }
+      
+              if (this.filter_user != null) {
+                var filteredItems = [];
+                for (let i = 0; i < items.length; i++) {
+                  if (items[i].next_execution_assigned_user != null && items[i].next_execution_assigned_user.id == this.filter_user) {
+                    filteredItems.push(items[i]);
+                  }
+                }
+                items = filteredItems;
+              }
+
+              allItems.push(items);
+            }
           }
         }
-        else
-          this.chores = allChores;
+        allItems = allItems[0].concat(allItems[1])
+        allItems.map(item =>{
+          if(item.next_estimated_execution_time == null && item.due_date != null)
+          {
+            item.next_estimated_execution_time = item.due_date;
+          }
+        });
+
+        allItems.sort(function(a,b){
+          if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
+            var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
+            var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
+  
+            var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
+            var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
+  
+            return aParsedDueDate - bParsedDueDate;
+          }
+          return;
+        })
+        console.log(allItems);
         
-        this.state = this.entity.state
+        allItems.map(item =>{
+          var dueInDays = item.next_estimated_execution_time ? this.calculateDueDate(item.next_estimated_execution_time) : 10000;
+          item.dueInDays = dueInDays;
+          if(this.show_days != null) {
+            if(dueInDays <= this.show_days){
+              finishedItemsList.push(item);
+            }
+            else if(item.next_estimated_execution_time != null && item.next_estimated_execution_time.slice(0,4) == "2999") {
+              item.next_estimated_execution_time = "-";
+              finishedItemsList.unshift(item)
+            }
+          }
+          else {
+            if(item.next_estimated_execution_time == null || dueInDays == 10000 || item.next_estimated_execution_time.slice(0,4) == "2999"){
+              item.next_estimated_execution_time = "-";
+              finishedItemsList.unshift(item)
+            }
+            else
+            finishedItemsList.push(item);
+          }
+        })
+        
+        if(this.show_quantity != null) {
+          this.items = finishedItemsList.slice(0, this.show_quantity);
+          this.notShowing = finishedItemsList.slice(this.show_quantity);
+        }
+        else {
+          this.items = finishedItemsList;
+          this.notShowing = 0;
+        }
       }
-      
 
       this.requestUpdate();
     }
