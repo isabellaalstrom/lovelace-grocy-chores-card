@@ -300,7 +300,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
         allItems.map(item =>{
           var dueInDays = item.next_estimated_execution_time ? this.calculateDueDate(item.next_estimated_execution_time) : 10000;
           item.dueInDays = dueInDays;
-          if(this.show_days !== null) {
+          if(this.show_days != null) {
             if(dueInDays <= this.show_days){
               finalItemsList.push(item);
             }
