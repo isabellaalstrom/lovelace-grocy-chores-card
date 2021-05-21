@@ -189,7 +189,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
         this.filter_user = this.config.filter_user == null ? null : this.config.filter_user;
         this.remove_filter = this.config.remove_filter == null ? false : this.config.remove_filter;
         this.show_quantity = this.config.show_quantity == null || this.config.show_quantity == 0 || this.config.show_quantity == '' ? null : this.config.show_quantity;
-        this.show_days = this.config.show_days == null || this.config.show_days == 0 || this.config.show_days == '' ? null : this.config.show_days;
+        this.show_days = this.config.show_days === null || this.config.show_days === '' ? null : this.config.show_days;
         this.show_assigned = this.config.show_assigned == null ? true : this.config.show_assigned;
         this.show_track_button = this.config.show_track_button == null ? true : this.config.show_track_button;
         this.show_last_tracked = this.config.show_last_tracked == null ? true : this.config.show_last_tracked;
@@ -300,7 +300,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
         allItems.map(item =>{
           var dueInDays = item.next_estimated_execution_time ? this.calculateDueDate(item.next_estimated_execution_time) : 10000;
           item.dueInDays = dueInDays;
-          if(this.show_days != null) {
+          if(this.show_days !== null) {
             if(dueInDays <= this.show_days){
               finalItemsList.push(item);
             }
