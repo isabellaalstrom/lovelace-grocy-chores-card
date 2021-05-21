@@ -268,7 +268,16 @@ customElements.whenDefined('card-tools').then(() => {
           }
         });
 
+        console.log(allItems);
         allItems.sort(function(a,b){
+          if (a.next_estimated_execution_time == null || a.next_estimated_execution_time == undefined || a.next_estimated_execution_time == "-")
+          {
+            return -1;
+          }
+          if (b.next_estimated_execution_time == null || b.next_estimated_execution_time == undefined || b.next_estimated_execution_time == "-")
+          {
+            return 1;
+          }
           if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
             var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
             var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
@@ -278,9 +287,8 @@ customElements.whenDefined('card-tools').then(() => {
   
             return aParsedDueDate - bParsedDueDate;
           }
-          return;
+          return 0;
         })
-        console.log(allItems);
         
         allItems.map(item =>{
           var dueInDays = item.next_estimated_execution_time ? this.calculateDueDate(item.next_estimated_execution_time) : 10000;
