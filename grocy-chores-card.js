@@ -136,7 +136,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
             </div>
             ${this.notShowing.length > 0 && this.notShowing.length != null ? html
               `
-              <div class="secondary">
+              <div class="secondary not-showing">
                   ${this.translate("Look in Grocy for {number} more items").replace("{number}", this.notShowing.length)}
               </div>
               `
@@ -174,6 +174,11 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
             }
             .due-today {
               color: orange !important;
+            }
+            .not-showing {
+              margin-top: -16px;
+              margin-left: 16px;
+              padding-bottom: 16px;
             }
             .secondary {
               display: block;
@@ -336,16 +341,14 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
       return 3;
     }
   }
-  
-  customElements.define('grocy-chores-card', GrocyChoresCard);
-
+      
   // Configure the preview in the Lovelace card picker
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: 'grocy-chores-card',
-    name: 'Grocy Chores Card',
+    name: 'Grocy Chores and Tasks Card',
     preview: false,
-    description: 'A card used to display chores information from the Grocy custom component.',
-    });
-
-  customElements.define("grocy-chores-card", GrocyChoresCard);
+    description: 'A card used to display chores and/or tasks from the Grocy custom component.',
+  });
+  
+  customElements.define('grocy-chores-card', GrocyChoresCard);
