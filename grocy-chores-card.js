@@ -64,14 +64,23 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
   
     render(){
       if (!this.entities)
-      return html`
-      <hui-warning>
-        ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found",
-          "entity",
-          this.config.entity
-        )}
-      </hui-warning>
-      `
+      {
+        return html`
+        <hui-warning>
+          ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found",
+            "entity",
+            this.config.entity
+          )}
+        </hui-warning>
+        `
+      }
+
+      if(this.items == undefined)
+      {
+        this.items = [];
+        this.notShowing = [];
+      }
+
       return html
       `
         ${this._renderStyle()}
@@ -229,8 +238,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
           var items;
           if (this.entities[i].state == 'unknown')
           {
-            console.error("The Grocy sensor " + this.entities[i].entity_id + " is unknown.");
-            return;
+            console.warn("The Grocy sensor " + this.entities[i].entity_id + " is unknown.");
           }
           else {
             if (this.entities[i].attributes.chores != undefined || this.entities[i].attributes.chores != null) {
@@ -273,67 +281,70 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
             }
           }
         }
-        allItems = allItems[0].concat(allItems[1])
-        allItems = allItems.filter(function(x) {
-          return x !== undefined;
-        });
-        allItems.map(item =>{
-          if(item.next_estimated_execution_time == null && item.due_date != null)
-          {
-            item.next_estimated_execution_time = item.due_date;
-          }
-        });
+        if(allItems.length > 0)
+        {
+          allItems = allItems[0].concat(allItems[1])
+          allItems = allItems.filter(function(x) {
+            return x !== undefined;
+          });
+          allItems.map(item =>{
+            if(item.next_estimated_execution_time == null && item.due_date != null)
+            {
+              item.next_estimated_execution_time = item.due_date;
+            }
+          });
 
-        allItems.sort(function(a,b){
-          if (a.next_estimated_execution_time == null || a.next_estimated_execution_time == undefined || a.next_estimated_execution_time == "-")
-          {
-            return -1;
-          }
-          if (b.next_estimated_execution_time == null || b.next_estimated_execution_time == undefined || b.next_estimated_execution_time == "-")
-          {
-            return 1;
-          }
-          if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
-            var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
-            var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
-  
-            var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
-            var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
-  
-            return aParsedDueDate - bParsedDueDate;
-          }
-          return 0;
-        })
-        
-        allItems.map(item =>{
-          var dueInDays = item.next_estimated_execution_time ? this.calculateDueDate(item.next_estimated_execution_time) : 10000;
-          item.dueInDays = dueInDays;
-          if(this.show_days != null) {
-            if(dueInDays <= this.show_days){
+          allItems.sort(function(a,b){
+            if (a.next_estimated_execution_time == null || a.next_estimated_execution_time == undefined || a.next_estimated_execution_time == "-")
+            {
+              return -1;
+            }
+            if (b.next_estimated_execution_time == null || b.next_estimated_execution_time == undefined || b.next_estimated_execution_time == "-")
+            {
+              return 1;
+            }
+            if (a.next_estimated_execution_time != null && b.next_estimated_execution_time != null) {
+              var aSplitDate = a.next_estimated_execution_time.split(/[- :T]/)
+              var bSplitDate = b.next_estimated_execution_time.split(/[- :T]/)
+    
+              var aParsedDueDate = new Date(aSplitDate[0], aSplitDate[1]-1, aSplitDate[2]);
+              var bParsedDueDate = new Date(bSplitDate[0], bSplitDate[1]-1, bSplitDate[2]);
+    
+              return aParsedDueDate - bParsedDueDate;
+            }
+            return 0;
+          })
+          
+          allItems.map(item =>{
+            var dueInDays = item.next_estimated_execution_time ? this.calculateDueDate(item.next_estimated_execution_time) : 10000;
+            item.dueInDays = dueInDays;
+            if(this.show_days != null) {
+              if(dueInDays <= this.show_days){
+                finalItemsList.push(item);
+              }
+              else if(item.next_estimated_execution_time != null && item.next_estimated_execution_time.slice(0,4) == "2999") {
+                item.next_estimated_execution_time = "-";
+                finalItemsList.unshift(item)
+              }
+            }
+            else {
+              if(item.next_estimated_execution_time == null || dueInDays == 10000 || item.next_estimated_execution_time.slice(0,4) == "2999"){
+                item.next_estimated_execution_time = "-";
+                finalItemsList.unshift(item)
+              }
+              else
               finalItemsList.push(item);
             }
-            else if(item.next_estimated_execution_time != null && item.next_estimated_execution_time.slice(0,4) == "2999") {
-              item.next_estimated_execution_time = "-";
-              finalItemsList.unshift(item)
-            }
+          })
+          
+          if(this.show_quantity != null) {
+            this.items = finalItemsList.slice(0, this.show_quantity);
+            this.notShowing = finalItemsList.slice(this.show_quantity);
           }
           else {
-            if(item.next_estimated_execution_time == null || dueInDays == 10000 || item.next_estimated_execution_time.slice(0,4) == "2999"){
-              item.next_estimated_execution_time = "-";
-              finalItemsList.unshift(item)
-            }
-            else
-            finalItemsList.push(item);
+            this.items = finalItemsList;
+            this.notShowing = 0;
           }
-        })
-        
-        if(this.show_quantity != null) {
-          this.items = finalItemsList.slice(0, this.show_quantity);
-          this.notShowing = finalItemsList.slice(this.show_quantity);
-        }
-        else {
-          this.items = finalItemsList;
-          this.notShowing = 0;
         }
       }
       this.requestUpdate();
