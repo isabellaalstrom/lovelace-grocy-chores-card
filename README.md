@@ -46,6 +46,7 @@ views:
 | show_last_tracked | bool | **Optional** | `true` | Show when someone last tracked this chore (does not work on tasks).
 | show_last_tracked_by | bool | **Optional** | `true` | Show who last tracked this chore (`show_last_tracked` must be true to show this) (does not work on tasks).
 | show_track_button | bool | **Optional** | `true` | Show track (complete) button
+| show_empty | bool | **Optional** | `true` | Set to false to hide card when no items
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.

@@ -81,6 +81,11 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
         this.notShowing = [];
       }
 
+      if(this.items.length < 1 && this.show_empty == false)
+      {
+        return "";
+      }
+
       return html
       `
         ${this._renderStyle()}
@@ -211,6 +216,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
         this.filter_category = this.config.filter_category == null ? null : this.config.filter_category;
         this.show_category = this.config.show_category == null ? true : this.config.show_category;
         this.show_description = this.config.show_description == null ? true : this.config.show_description;
+        this.show_empty = this.config.show_empty == null ? true : this.config.show_empty;
       }
 
     set hass(hass) {
