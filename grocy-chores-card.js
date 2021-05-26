@@ -249,15 +249,19 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
           else {
             if (this.entities[i].attributes.chores != undefined || this.entities[i].attributes.chores != null) {
               items = this.entities[i].attributes.chores;
-              items.map(item =>{
-                item.type = "chore"
-              });
+              if(items != undefined)
+                items.map(item =>{
+                  item.type = "chore"
+                });
             }
             else {
               items = this.entities[i].attributes.tasks;
-              items.map(item =>{
-                item.type = "task"
-              });
+              if(items != undefined)
+              {
+                items.map(item =>{
+                  item.type = "task"
+                });
+              }
             }
             if (items != null){
               if (this.filter != null) {
