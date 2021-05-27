@@ -47,6 +47,7 @@ views:
 | show_last_tracked_by | bool | **Optional** | `true` | Show who last tracked this chore (`show_last_tracked` must be true to show this) (does not work on tasks).
 | show_track_button | bool | **Optional** | `true` | Show track (complete) button
 | show_empty | bool | **Optional** | `true` | Set to false to hide card when no items
+| show_create_task | bool | **Optional** | `false` | Set to true to show ability to add a task in Grocy directly from the card.
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
@@ -56,11 +57,14 @@ custom_translation:
   Overdue: "Försenad"
   Today: "Idag"
   Due: "Dags"
+  'Assigned to': "Tilldelad"
   'Last tracked': "Senast"
   by: "av"
   Track: "Gör nu"
-  'No chores': "Tom"
-  'Look in Grocy for {number} more chores': "Det finns {number} fler göromål i Grocy"
+  'No todos': "Tomt"
+  'Look in Grocy for {number} more items': "Det finns {number} fler göromål i Grocy"
+  'Add task': "Lägg till"
+  'Optional due date/time': "Valfritt datum/tid"
 ```
 
 ## <a name="user_id"></a> How to get the correct user id?
