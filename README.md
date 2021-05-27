@@ -65,6 +65,7 @@ custom_translation:
   'Look in Grocy for {number} more items': "Det finns {number} fler göromål i Grocy"
   'Add task': "Lägg till"
   'Optional due date/time': "Valfritt datum/tid"
+  "'Name' can't be empty": "Fyll i namn"
 ```
 
 ## <a name="user_id"></a> How to get the correct user id?

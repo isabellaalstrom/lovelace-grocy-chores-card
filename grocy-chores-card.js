@@ -164,13 +164,13 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
                     id="add-task"
                     class="add-input"
                     no-label-float
-                    placeholder="${this.translate("Add task")}">
+                    placeholder=${this.translate("Add task")}>
                   </paper-input>
                   <paper-input
                     id="add-date"
                     class="add-input"
                     no-label-float
-                    placeholder="${this.translate("Optional due date/time")}"
+                    placeholder=${this.translate("Optional due date/time")}
                     value="${this._formatDate()}">
                   </paper-input>
                 </div>
@@ -183,10 +183,10 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
     _formatDate(){
       var currentdate = new Date(); 
       var datetime = currentdate.getFullYear() + "-"
-                + ("0" + (currentdate.getMonth() + 1)).slice(-2)  + "-" 
+                + ("0" + (currentdate.getMonth() + 1)).slice(-2) + "-" 
                 + currentdate.getDate() + " "  
-                + currentdate.getHours() + ":"  
-                + currentdate.getMinutes();
+                + ("0" + (currentdate.getHours() + 1)).slice(-2) + ":"  
+                + ("0" + (currentdate.getMinutes() + 1)).slice(-2);
       return datetime;
     }
 
@@ -216,7 +216,11 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
     _addTask(){
       var taskName = this.shadowRoot.getElementById('add-task').value;
       var taskDueDate = this.shadowRoot.getElementById('add-date').value;
-      if(taskDueDate == null) {
+      if(taskName == null || taskName == "")
+      {
+        alert(this.translate("'Name' can't be empty"));
+      }
+      else if(taskDueDate == null) {
         this._hass.callService("grocy", "add_generic", {
           entity_type: "tasks",
           data: { "name": taskName }
