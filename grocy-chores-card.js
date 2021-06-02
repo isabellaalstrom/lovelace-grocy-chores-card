@@ -91,11 +91,34 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
         ${this._renderStyle()}
         ${html
           `<ha-card>
-            <h1 class="card-header">
+            <h1 class="card-header flex">
               <div class="name">
                 ${this.header}
               </div>
+              ${this.show_create_task ? html
+                `<mwc-button class="hide-button" @click=${ev => this._toggleAddTask()}><ha-icon icon="mdi:chevron-down"></ha-icon> Add task</mwc-button>`
+              : ""}
             </h1>
+            ${this.show_create_task ? html
+              `
+                <div style="display: none;" id="add-task-row" class="add-row">
+                  <mwc-button @click=${ev => this._addTask()}><ha-icon class="add-icon" icon="mdi:plus"></ha-icon></mwc-button>
+                  <paper-input
+                    id="add-task"
+                    class="add-input"
+                    no-label-float
+                    placeholder=${this.translate("Add task")}>
+                  </paper-input>
+                  <paper-input
+                    id="add-date"
+                    class="add-input"
+                    no-label-float
+                    placeholder=${this.translate("Optional due date/time")}
+                    value="${this._formatDate()}">
+                  </paper-input>
+                </div>
+              `
+            : ""}
             <div class="card-content">
               ${this.items.length > 0 ? html`
                 ${this.items.map(item =>
@@ -155,38 +178,22 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
               </div>
               `
               : ""}
-              ${this.show_create_task ? html
-                `
-                <mwc-button class="hide-button" @click=${ev => this._toggleAddTask()}><ha-icon icon="mdi:chevron-down"></ha-icon> Add task</mwc-button>
-                <div style="display: none;" id="add-task-row" class="add-row">
-                  <mwc-button @click=${ev => this._addTask()}><ha-icon class="add-icon" icon="mdi:plus"></ha-icon></mwc-button>
-                  <paper-input
-                    id="add-task"
-                    class="add-input"
-                    no-label-float
-                    placeholder=${this.translate("Add task")}>
-                  </paper-input>
-                  <paper-input
-                    id="add-date"
-                    class="add-input"
-                    no-label-float
-                    placeholder=${this.translate("Optional due date/time")}
-                    value="${this._formatDate()}">
-                  </paper-input>
-                </div>
-                `
-              : ""}
           </ha-card>`}
       `;
     } 
 
     _formatDate(){
-      var currentdate = new Date(); 
-      var datetime = currentdate.getFullYear() + "-"
-                + ("0" + (currentdate.getMonth() + 1)).slice(-2) + "-" 
-                + currentdate.getDate() + " "  
-                + ("0" + (currentdate.getHours() + 1)).slice(-2) + ":"  
-                + ("0" + (currentdate.getMinutes() + 1)).slice(-2);
+      var currentdate = new Date();
+      var year = currentdate.getFullYear();
+      var month = ("0" + (currentdate.getMonth() + 1)).slice(-2);
+      var date = ("0" + (currentdate.getDate() + 1)).slice(-2)
+      var hour = ("0" + (currentdate.getHours() + 1)).slice(-2);
+      if(hour == "24")
+        hour = "00";
+      var minutes = ("0" + (currentdate.getMinutes() + 1)).slice(-2);
+
+      var datetime = year + "-" + month + "-" + date + " "
+                + hour + ":" + minutes;
       return datetime;
     }
 
@@ -263,6 +270,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
               color: #8c96a5;
             }
             .add-row {
+              margin-top: -16px;
               padding-bottom: 16px;
               display: flex;
               flex-direction: row;
@@ -274,8 +282,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
               width: 100%;
             }
             .hide-button {
-              margin-top: -16px;
-              padding: 0 16px 16px 16px;
+              padding: 0 0 16px 16px;
             }
           </style>
         `;
