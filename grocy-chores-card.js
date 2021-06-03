@@ -1,4 +1,4 @@
-import { html, LitElement } from "lit";
+import { html, LitElement } from "https://unpkg.com/lit?module";
 
   class GrocyChoresCard extends LitElement {
     static getConfigElement() {
