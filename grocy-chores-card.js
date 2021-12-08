@@ -366,11 +366,21 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
       
               if (this.filter_user != null) {
                 var filteredItems = [];
-                for (let i = 0; i < items.length; i++) {
-                  if (items[i].next_execution_assigned_user != null && items[i].next_execution_assigned_user.id == this.filter_user) {
-                    filteredItems.push(items[i]);
+                
+                if (item.type = "chore") {
+				  for (let i = 0; i < items.length; i++) {
+                    if (items[i].next_execution_assigned_user != null && items[i].next_execution_assigned_user.id == this.filter_user) {
+                      filteredItems.push(items[i]);
+                    }
+                  }
+                } else {
+                  for (let i = 0; i < items.length; i++) {
+                    if (items[i].assigned_to_user_id != null && items[i].assigned_to_user_id == this.filter_user) {
+                      filteredItems.push(items[i]);
+                    }
                   }
                 }
+
                 items = filteredItems;
               }
 
