@@ -367,7 +367,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
               if (this.filter_user != null) {
                 var filteredItems = [];
                 
-                if (item.type = "chore") {
+                if (items[i].type === "chore") {
                   for (let i = 0; i < items.length; i++) {
                     if (items[i].next_execution_assigned_user != null && items[i].next_execution_assigned_user.id == this.filter_user) {
                       filteredItems.push(items[i]);
