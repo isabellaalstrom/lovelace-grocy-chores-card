@@ -6,7 +6,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
     }
   
     static getStubConfig() {
-      return { entity: "sensor.grocy_chores", title: null, show_quantity: null, show_days: null, show_assigned: true, show_last_tracked: true, show_last_tracked_by: true, show_track_button: true }
+      return { entity: "sensor.grocy_chores", title: null, show_quantity: null, show_days: null, show_assigned: true, show_last_tracked: true, show_last_tracked_by: true, show_track_button: true, browser_mod: false }
     }
 
     setConfig(config) {
@@ -156,13 +156,13 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
                       ${item.type == "chore" ? html
                       `
                       <div>
-                        <mwc-button @click=${ev => this._trackChore(item.id)}>${this.translate("Track")}</mwc-button>
+                        <mwc-button @click=${ev => this._trackChore(item.id, item.name)}>${this.translate("Track")}</mwc-button>
                       </div>     
                       `
                       : html
                       `
                       <div>
-                        <mwc-button @click=${ev => this._trackTask(item.id)}>${this.translate("Track")}</mwc-button>
+                        <mwc-button @click=${ev => this._trackTask(item.id, item.name)}>${this.translate("Track")}</mwc-button>
                       </div>
                       `}
                     `
@@ -197,17 +197,29 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
       return datetime;
     }
 
-    _trackChore(choreId){
+    _trackChore(choreId, choreName){
       this._hass.callService("grocy", "execute_chore", {
         chore_id: choreId,
         done_by: this.userId
       });
+      this._showToast(choreName);
     }
 
-    _trackTask(taskId){
+    _trackTask(taskId, taskName){
       this._hass.callService("grocy", "complete_task", {
         task_id: taskId
       });
+      this._showToast(taskName);
+    }
+
+    _showToast(name){
+      if(this.config.browser_mod != null && this.config.browser_mod === true)
+      {
+        this._hass.callService("browser_mod", "toast", {
+          message: `${this.translate("Tracked")} "${name}".`,
+          duration: 3000
+        });
+      }
     }
 
     _toggleAddTask(){
