@@ -48,6 +48,7 @@ views:
 | show_track_button | bool | **Optional** | `true` | Show track (complete) button
 | show_empty | bool | **Optional** | `true` | Set to false to hide card when no items
 | show_create_task | bool | **Optional** | `false` | Set to true to show ability to add a task in Grocy directly from the card.
+| browser_mod | bool | **Optional** | `false` | Set to true _if you have installed [browser_mod](https://github.com/thomasloven/hass-browser_mod)_ and want feedback when tracking, in the form of a native toast bar.
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
@@ -66,6 +67,7 @@ custom_translation:
   'Add task': "Lägg till"
   'Optional due date/time': "Valfritt datum/tid"
   "'Name' can't be empty": "Fyll i namn"
+  Tracked: "Färdigställt"
 ```
 
 ## <a name="user_id"></a> How to get the correct user id?
