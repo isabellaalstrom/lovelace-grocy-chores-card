@@ -1,3 +1,5 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+
 # grocy-chores-card
 
 A Lovelace custom card for [custom component Grocy](https://github.com/custom-components/grocy) in Home Assistant.
