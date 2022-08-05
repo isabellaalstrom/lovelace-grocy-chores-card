@@ -202,10 +202,10 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
                         ${item._filtered_name != null ? item._filtered_name : item.name}
                       </div>
 
-                      ${this.hide_text_with_no_data == false || item.next_estimated_execution_time != null ? html
+                      ${this.hide_text_with_no_data == false || (item.next_estimated_execution_time != null && this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) != null) ? html
                         `
                         <div class="secondary">
-                          ${this.translate("Due")}: <span class="${item.next_estimated_execution_time != null ? this.checkDueClass(item.dueInDays) : ""}">${item.next_estimated_execution_time != null ? this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) : "-"}</span>
+                          ${this.translate("Due")}: <span class="${item.next_estimated_execution_time != null ? this.checkDueClass(item.dueInDays) : ""}">${item.next_estimated_execution_time != null && this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) != null ? this.formatDueDate(item.next_estimated_execution_time, item.dueInDays) : "-"}</span>
                         </div>
                         `
                       : ""}
@@ -282,18 +282,34 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
       if(this.config.use_long_date){
         if((currentdate.getHours() == 0 && currentdate.getMinutes() == 0 && currentdate.getSeconds() == 0) || (currentdate.getHours() == 23 && currentdate.getMinutes() == 59 && currentdate.getSeconds() == 59)){
           const options = { month: 'long', day: 'numeric', year: 'numeric' };
-          return new Intl.DateTimeFormat('default', options).format(currentdate);
+          try{
+            return new Intl.DateTimeFormat('default', options).format(currentdate);
+          }catch{
+            return null
+          }          
         }else{
           const options = { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: (this.config.use_24_hours == false) };
-          return new Intl.DateTimeFormat('default', options).format(currentdate);
+          try{
+            return new Intl.DateTimeFormat('default', options).format(currentdate);
+          }catch{
+            return null
+          }
         }
       }else{
         if((currentdate.getHours() == 0 && currentdate.getMinutes() == 0 && currentdate.getSeconds() == 0) || (currentdate.getHours() == 23 && currentdate.getMinutes() == 59 && currentdate.getSeconds() == 59)){
           const options = { month: 'numeric', day: 'numeric', year: 'numeric' };
-          return new Intl.DateTimeFormat('default', options).format(currentdate);
+          try{
+            return new Intl.DateTimeFormat('default', options).format(currentdate);
+          }catch{
+            return null
+          }
         }else{
           const options = { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: (this.config.use_24_hours == false) };
-          return new Intl.DateTimeFormat('default', options).format(currentdate);
+          try{
+            return new Intl.DateTimeFormat('default', options).format(currentdate);
+          }catch{
+            return null
+          }
         } 
       }
     }
