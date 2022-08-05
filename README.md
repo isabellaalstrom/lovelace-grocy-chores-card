@@ -50,7 +50,7 @@ views:
 | show_create_task | bool | **Optional** | `false` | Set to true to show ability to add a task in Grocy directly from the card. (not functional at this time).
 | browser_mod | bool | **Optional** | `false` | Set to true _if you have installed [browser_mod](https://github.com/thomasloven/hass-browser_mod)_ and want feedback when tracking, in the form of a native toast bar.
 | show_overflow | bool | **Optional** | `false` | When true, replaces the 'Look in Grocy for X more items' text with a 'Show X more' button that toggles an overflow area.
-| show_divider | bool | **Optional** | `false` | When true, shows a divider between each task. Uses the CSS variable 'entities-divider-color' from your theme.
+| show_divider | bool | **Optional** | `false` | When true, shows a divider between each task. Uses the CSS variable 'entities-divider-color' and falls back on `divider-color` from your theme.
 | use_icons | bool | **Optional** |  | When null, uses icons for chores/tasks only when chore_icon or task_icon is set. When true, forces defaults if chore_icon/task_icon is not set. When false, overrides chore_icon/task_icon and always uses text buttons.
 | task_icon | string | **Optional** |  | Sets the icon used on Tasks. Replaces the text. Set "use_icons" to true and don't use this parameter to use default icon. */
 | task_icon_size | number | **Optional** | `24` | Sets the size of the icon for Tasks. Default is 24 because default is an empty checkbox. Only applies when use_icon or task_icon is set.
@@ -133,7 +133,7 @@ This version also introduces better date formatting. Each date is formatted base
   - Etc.
 
 ## Miscellaneous Style Options
-* `show_divider` – When `true`, adds a divider between each task or chore. The color is specified in your theme using the `entities-divider-color` variable.
+* `show_divider` – When `true`, adds a divider between each task or chore. The color is specified in your theme using the `entities-divider-color` variable (with fallback to `divider-color`).
 * `hide_text_with_no_data` – When `true`, when an item’s property is blank, that property is hidden regardless of other settings. For example, if you have `show_last_tracked` set to `true`, but a chore has never been completed, instead of showing “Last tracked: -”, the “Last tracked” line simply does not appear on that item (see Clean out the Fridge in the screenshot vs Sweep the Stairs).
 * Some of the colors can now be specified in your theme using CSS variables.
   - `--red`: sets the color of Overdue due date.
