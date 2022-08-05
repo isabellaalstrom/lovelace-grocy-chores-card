@@ -92,6 +92,75 @@ Currently, [this issue in Grocy](https://github.com/grocy/grocy/issues/1260) res
 4. Find the user that corresponds to the user who created the api key in step 2.
 5. Note the id for that user. If the id is not `1` you need to specify `user_id` to that user id in the cards configuration to be able to track chores.
 
+## Using the Collapsible Overflow
+Instead of the “Look in Grocy for X more items” text from older versions, this version can show all additional items in a collapsible overflow panel.
+
+### Usage
+1. Add the `show_quantity` parameter and set it to the number of items that should be shown in the main area.
+2. Add the `show_overflow` parameter and set it to `true`.
+3. To override the default size of the expand button icon, set `expand_icon_size` to an integer value.
+
+Once you refresh, you should see a new button with an expand button at the bottom of the card if you have additional items. Click this to expand the card and show all items.
+ 
+## Icon Buttons
+This version adds the ability to use icons instead of the “TRACK” text buttons on each item. Tasks and Chores can have different icons and sizes.
+
+### Usage
+* `use_icons` parameter
+  - When not used or `null`, icons are controlled by the other parameters.
+  - When `true`, both Tasks and Chores will use an icon. If the associated parameters are not set, it will use the default icons.
+  - When `false`, all other icon options are ignored and text-based buttons are used.
+* `task_icon`/`chore_icon` parameters
+  - When set to a valid icon (i.e. `mdi:check`), items of that type will use the specified icon instead of text as long as `use_icons` is not `false`.
+  - When `use_icons` is true, you only need to use these parameters to override the default icons.
+* `task_icon_size`/`chore_icon_size` parameters
+  - When icons are used, specifies the height and width of the icon for that item type.
+  - Default for chores is `32` (as it’s a button) and tasks is `24` (because it is a checkbox).
+
+## Date Formatting
+This version also introduces better date formatting. Each date is formatted based on the current user’s localization settings so that the order of tokens (day/month/year vs month/day/year) is correct. It also allows 12 or 24 hour times and long date formats (i.e. December 31, 2022).
+
+### Usage
+* `use_long_date` – When `true`, uses the long date format (i.e. December 31, 2022). When `false`, uses the short format (i.e. 12/31/2022). Default is `false`.
+* `use_24_hours` – When `true`, the time is shown in 24 hour format (i.e. 17:59). When `false`, it uses 12 hour format (i.e. 5:59 pm). Default is to use 24 hour format (`true`).
+* `due_in_days_threshold` – When set to a value grater than `1`, specifies how many days from today will be shown as “Due: In X Days”. Default is `0`, which means unused. For example, if it is set to `3`, your tasks should have the following due dates:
+  - Due: Overdue
+  - Due: Today
+  - Due: Tomorrow
+  - Due: In 2 Days
+  - Due: In 3 Days
+  - Due: August 9, 2022
+  - Etc.
+
+## Miscellaneous Style Options
+* `show_divider` – When `true`, adds a divider between each task or chore. The color is specified in your theme using the `entities-divider-color` variable.
+* `hide_text_with_no_data` – When `true`, when an item’s property is blank, that property is hidden regardless of other settings. For example, if you have `show_last_tracked` set to `true`, but a chore has never been completed, instead of showing “Last tracked: -”, the “Last tracked” line simply does not appear on that item (see Clean out the Fridge in the screenshot vs Sweep the Stairs).
+* Some of the colors can now be specified in your theme using CSS variables.
+  - `--red`: sets the color of Overdue due date.
+  - `--orange`: sets the color of Today due date.
+  - `--green`: sets the mouse-over color on icon buttons.
+  - `--paper_font_subhead_-_font_size`: sets the size of the task title test.
+  - `--paper_font_body1_-_font_size`: sets the size of the task’s other information text.
+  - `--primary-text-color`: sets the title text, icon color, and item title text color.
+  - `--secondary-text-color`: sets the color of other text.
+  - `--accent-color`: sets the hover color of the Show More button and icon.
+ 
+## Other changes in this version
+In general, this update aims to not change any default setups so that anyone using this card won’t notice any change unless they change it themselves. However, some small changes have been made:
+
+1. Date is always formatted using user’s localization settings rather than always appearing YYYY/MM//DD.
+2. Due Date will be shown as “Tomorrow” when it is due in 1 day.
+3. Task title line will now always use the following CSS variables:
+    - `--paper_font_subhead_-_font_size` for the size.
+    - `--primary-text-color` for the color.
+4. Other task lines will now always use the following CSS variables:
+    - `--paper_font_body1_-_font_size` for the size.
+    - `--secondary-text-color` for the color.
+
+## Known Issues
+1. Add Task area is incomplete and setting the `show_add_task` flag to `true` causes the card to disappear. (Add Task card has errors from main branch)
+2. Due/Completed dates with the time values 23:59:59 or 00:00:00 will not show the times. This is because those are the default values populated when no time is set.
+
 ---
 
 Like my work and want to say thanks? Do it here:
