@@ -16,7 +16,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
               show_track_button: true,
               browser_mod: false,
               show_overflow: false, /** When true, replaces the 'Look in Grocy for X more items' text with a 'Show X more' button that toggles an overflow area. */
-              show_divider: false, /** When true, shows a divider between each task. Uses the CSS variable 'entities-divider-color' from your theme. */
+              show_divider: false, /** When true, shows a divider between each task. Uses the CSS variable 'entities-divider-color' with fallback to 'divider-color' from your theme. */
               use_icons: null, /** When null, uses icons for chores/tasks only when chore_icon or task_icon is set. When true, forces defaults if chore_icon/task_icon is not set. When false, overrides chore_icon/task_icon and always uses text buttons. */
               task_icon: null, /** Sets the icon used on Tasks. Replaces the text. Set "use_icons" to true and don't use this parameter to use default icon. */
               task_icon_size: 24, /** Sets the size of the icon for Tasks. Default is 24 because default is an empty checkbox. Only applies when use_icon or task_icon is set. */
@@ -424,7 +424,7 @@ import { html, LitElement } from "https://unpkg.com/lit?module";
               padding: 0 0 16px 16px;
             }
             .grocy-item-container, .grocy-item-container-force-border {
-              border-top: ${this.show_divider ? 1 : 0 }px solid var(--entities-divider-color, transparent); 
+              border-top: ${this.show_divider ? 1 : 0 }px solid var(--entities-divider-color, var(--divider-color, transparent)); 
               padding-top: 12px;
               align-items: center;
             }
