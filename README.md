@@ -2,6 +2,8 @@
 
 # grocy-chores-card
 
+Credit to [isabellaalstrom](https://github.com/isabellaalstrom/lovelace-grocy-chores-card), this is a fork of her work.
+
 A Lovelace custom card for [custom component Grocy](https://github.com/custom-components/grocy) in Home Assistant.
 
 <img src="https://github.com/clarinetJWD/lovelace-grocy-chores-card/blob/master/grocy-chores-card.png" alt="Grocy Chores Card" />
