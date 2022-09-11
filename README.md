@@ -32,38 +32,38 @@ views:
 
 ## Options
 
-| Name | Type | Optional | Default | Description
-| ---- | ---- | -------- | ------- | -----------
-| type | string | **Required** |  | `custom:grocy-chores-card`
-| entity | string/list | **Required** |  | The entity id(s) of your Grocy chores and/or tasks sensor(s).
-| title | string | **Optional** | `"Todo"` | The title of the card.
-| show_quantity | number | **Optional** |  | The number of items you want to show in the card. The rest are either hidden or show in the overflow.
-| show_days | number | **Optional** |  | `0` to only show items that's due today or overdue. If not specified, shows all items.
-| user_id | number | **Optional** | `1` | Id of the Grocy user performing the items. Default if not specified is `1`. See further instructions [here](#user_id).
-| custom_translation | string-list | **Optional** |  | List of translations of string values used in the card (see below).
-| filter | string | **Optional** |  | Only show items that contains this filter in the name.
-| remove_filter | bool | **Optional** |  | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".
-| filter_user | number | **Optional** |  | Only show items assigned to the used with this user_id. Ex: `1`
-| show_assigned | bool | **Optional** | `true` | Show who's assigned to the item (does not work on tasks).
-| show_last_tracked | bool | **Optional** | `true` | Show when someone last tracked this chore (does not work on tasks).
-| show_last_tracked_by | bool | **Optional** | `true` | Show who last tracked this chore (`show_last_tracked` must be true to show this) (does not work on tasks).
-| show_track_button | bool | **Optional** | `true` | Show track (complete) button
-| show_empty | bool | **Optional** | `true` | Set to false to hide card when no items
-| show_create_task | bool | **Optional** | `false` | Set to true to show ability to add a task in Grocy directly from the card. (not functional at this time).
-| browser_mod | bool | **Optional** | `false` | Set to true _if you have installed [browser_mod](https://github.com/thomasloven/hass-browser_mod)_ and want feedback when tracking, in the form of a native toast bar.
-| show_overflow | bool | **Optional** | `false` | When true, replaces the 'Look in Grocy for X more items' text with a 'Show X more' button that toggles an overflow area.
-| show_divider | bool | **Optional** | `false` | When true, shows a divider between each task. Uses the CSS variable `entities-divider-color` and falls back on `divider-color` from your theme.
-| use_icons | bool | **Optional** |  | When null, uses icons for chores/tasks only when `chore_icon` or `task_icon` is set. When true, forces defaults if `chore_icon`/`task_icon` is not set. When false, overrides `chore_icon`/`task_icon` and always uses text buttons.
-| task_icon | string | **Optional** |  | Sets the icon used on Tasks. Replaces the text. Set `use_icons` to true and don't use this parameter to use default icon.
-| task_icon_size | number | **Optional** | `24` | Sets the size of the icon for Tasks. Default is 24 because default is an empty checkbox. Only applies when `use_icon` or `task_icon` is set.
-| chore_icon | string | **Optional** |  | Sets the icon used on Chores. Replaces the text. Set `use_icons` to true and don't use this parameter to use default icon.
-| chore_icon_size | number | **Optional** | `32` | Sets the size of the icon for Chores. Default is 32. Only applies when `use_icon` or `chore_icon` is set.
-| expand_icon_size | number | **Optional** | `30` | Sets the size of the expand/collapse button on the Overflow area. Default is 30. Only applies when `show_overflow` is set.
-| use_long_date | bool | **Optional** | `false` | Sets if the Due/Completed dates are formatted in long format (i.e. December 31, 2022) or short format (i.e. 12/31/2022). Uses localization settings for token order.
-| due_in_days_threshold | number | **Optional** | `0` | Due dates are reported as 'Overdue', 'Today', 'Tomorrow', 'In X Days', and finally using the actual date. This sets how many days use the 'In X Days' format before it switches to using date notation.
-| use_24_hours | bool | **Optional** | `true` | Sets if the times are shown in 12 hour or 24 hour formats.
-| hide_text_with_no_data | bool | **Optional** | `false` | When true, if a property for an item is not set, it hides the text. For example, if a chore has never been completed, instead of showing 'Last tracked: -', it will hide the 'Last tracked' row entirely.
-
+| Name                         | Type        | Optional     | Default  | Description                                                                                                                                                                                                                          |
+|------------------------------|-------------|--------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type                         | string      | **Required** |          | `custom:grocy-chores-card`                                                                                                                                                                                                           |
+| entity                       | string/list | **Required** |          | The entity id(s) of your Grocy chores and/or tasks sensor(s).                                                                                                                                                                        |
+| title                        | string      | **Optional** | `"Todo"` | The title of the card.                                                                                                                                                                                                               |
+| show_quantity                | number      | **Optional** |          | The number of items you want to show in the card. The rest are either hidden or show in the overflow.                                                                                                                                |
+| show_days                    | number      | **Optional** |          | E.g. `0` to only show items that are due today, overdue or have no due date. If not specified, shows all items.                                                                                                                      |
+| user_id                      | number      | **Optional** | `1`      | Id of the Grocy user performing the items. Default if not specified is `1`. See further instructions [here](#user_id).                                                                                                               |
+| custom_translation           | string-list | **Optional** |          | List of translations of string values used in the card (see below).                                                                                                                                                                  |
+| filter                       | string/list | **Optional** |          | Only show items that contains this filter in the name. When filter is a list, filters are applied as OR.                                                                                                                             |
+| remove_filter                | bool        | **Optional** |          | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".                                |
+| filter_user                  | number      | **Optional** |          | Only show items assigned to the used with this user_id. Ex: `1`                                                                                                                                                                      |
+| show_assigned                | bool        | **Optional** | `true`   | Show who's assigned to the item (does not work on tasks).                                                                                                                                                                            |
+| show_last_tracked            | bool        | **Optional** | `true`   | Show when someone last tracked this chore (does not work on tasks).                                                                                                                                                                  |
+| show_last_tracked_by         | bool        | **Optional** | `true`   | Show who last tracked this chore (`show_last_tracked` must be true to show this) (does not work on tasks).                                                                                                                           |
+| show_track_button            | bool        | **Optional** | `true`   | Show track (complete) button                                                                                                                                                                                                         |
+| show_empty                   | bool        | **Optional** | `true`   | Set to false to hide card when no items                                                                                                                                                                                              |
+| show_create_task             | bool        | **Optional** | `false`  | Set to true to show ability to add a task in Grocy directly from the card. Due date must be in format yyyy-mm-dd, e.g. 2022-01-31. When due date is empty, task has no due date.                                                     |
+| browser_mod                  | bool        | **Optional** | `false`  | Set to true _if you have installed [browser_mod v2](https://github.com/thomasloven/hass-browser_mod)_ and want feedback when tracking or adding a task, in the form of a native toast bar.                                           |
+| show_overflow                | bool        | **Optional** | `false`  | When true, replaces the 'Look in Grocy for X more items' text with a 'Show X more' button that toggles an overflow area.                                                                                                             |
+| show_divider                 | bool        | **Optional** | `false`  | When true, shows a divider between each task. Uses the CSS variable `entities-divider-color` and falls back on `divider-color` from your theme.                                                                                      |
+| use_icons                    | bool        | **Optional** |          | When null, uses icons for chores/tasks only when `chore_icon` or `task_icon` is set. When true, forces defaults if `chore_icon`/`task_icon` is not set. When false, overrides `chore_icon`/`task_icon` and always uses text buttons. |
+| task_icon                    | string      | **Optional** |          | Sets the icon used on Tasks. Replaces the text. Set `use_icons` to true and don't use this parameter to use default icon.                                                                                                            |
+| task_icon_size               | number      | **Optional** | `24`     | Sets the size of the icon for Tasks. Default is 24 because default is an empty checkbox. Only applies when `use_icon` or `task_icon` is set.                                                                                         |
+| chore_icon                   | string      | **Optional** |          | Sets the icon used on Chores. Replaces the text. Set `use_icons` to true and don't use this parameter to use default icon.                                                                                                           |
+| chore_icon_size              | number      | **Optional** | `32`     | Sets the size of the icon for Chores. Default is 32. Only applies when `use_icon` or `chore_icon` is set.                                                                                                                            |
+| expand_icon_size             | number      | **Optional** | `30`     | Sets the size of the expand/collapse button on the Overflow area. Default is 30. Only applies when `show_overflow` is set.                                                                                                           |
+| use_long_date                | bool        | **Optional** | `false`  | Sets if the Due/Completed dates are formatted in long format (i.e. December 31, 2022) or short format (i.e. 12/31/2022). Uses localization settings for token order.                                                                 |
+| due_in_days_threshold        | number      | **Optional** | `0`      | Due dates are reported as 'Overdue', 'Today', 'Tomorrow', 'In X Days', and finally using the actual date. This sets how many days use the 'In X Days' format, before it switches to using date notation.                             |
+| last_tracked_days_threshold  | number      | **Optional** | `0`      | Last tracked dates are reported as 'Today', 'Yesterday', 'x days ago' and finally the actual track date. This sets how many days use the 'x days ago' format, before it switches to using date notation.                             |
+| use_24_hours                 | bool        | **Optional** | `true`   | Sets if the times are shown in 12 hour or 24 hour formats.                                                                                                                                                                           |
+| hide_text_with_no_data       | bool        | **Optional** | `false`  | When true, if a property for an item is not set, it hides the text. For example, if a chore has never been completed, instead of showing 'Last tracked: -', it will hide the 'Last tracked' row entirely.                            |
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
@@ -92,7 +92,7 @@ Currently, [this issue in Grocy](https://github.com/grocy/grocy/issues/1260) res
 2. Note which user has created the api key used with the HA integration.
 3. Go to `http://yourgrocyip:port/api/users`
 4. Find the user that corresponds to the user who created the api key in step 2.
-5. Note the id for that user. If the id is not `1` you need to specify `user_id` to that user id in the cards configuration to be able to track chores.
+5. Note the id for that user. If the id is not `1` you need to specify `user_id` to that user id in the cards configuration to be able to track tasks and chores.
 
 ## Using the Collapsible Overflow
 Instead of the “Look in Grocy for X more items” text from older versions, this version can show all additional items in a collapsible overflow panel.
