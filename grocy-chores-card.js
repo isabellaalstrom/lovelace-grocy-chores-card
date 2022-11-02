@@ -86,6 +86,8 @@ class GrocyChoresCard extends LitElement {
             show_quantity: 5,
             show_assigned: true,
             show_overflow: true,
+            show_chores_without_due: true,
+            show_tasks_without_due: true,
             use_icons: true,
             use_long_date: true,
             due_in_days_threshold: 7,
@@ -421,16 +423,16 @@ class GrocyChoresCard extends LitElement {
 
     _isItemVisible(item) {
         let visible = false;
-        if (item.__due_in_days == null || this.show_days == null || item.__due_in_days < 0 || item.__due_in_days <= this.show_days) {
-            visible = true;
-            if (this.filter !== undefined) {
-                visible = this._checkMatchNameFilter(item);
-            }
+        
+        visible ||= item.__due_in_days == null;
+        visible &&= item.__type === "chore" ? this.show_chores_without_due : true;
+        visible &&= item.__type === "task" ? this.show_tasks_without_due : true;
 
-            if (visible && this.filter_user !== undefined) {
-                visible = this._checkMatchUserFilter(item);
-            }
-        }
+        visible ||= item.__due_in_days < 0;
+        visible ||= item.__due_in_days <= this.show_days;
+
+        visible &&= this.filter !== undefined ? this._checkMatchNameFilter(item) : true;
+        visible &&= this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true;
 
         return visible;
     }
@@ -613,6 +615,8 @@ class GrocyChoresCard extends LitElement {
         this.remove_filter = this.config.remove_filter ?? false;
         this.show_quantity = this.config.show_quantity || null;
         this.show_days = this.config.show_days ?? null;
+        this.show_chores_without_due = this.config.show_chores_without_due ?? true;
+        this.show_tasks_without_due = this.config.show_tasks_without_due ?? true;
         this.show_assigned = this.config.show_assigned ?? true;
         this.show_track_button = this.config.show_track_button ?? true;
         this.show_last_tracked = this.config.show_last_tracked ?? true;
