@@ -612,7 +612,7 @@ class GrocyChoresCard extends LitElement {
         this.filter_user = this.config.filter_user;
         this.remove_filter = this.config.remove_filter ?? false;
         this.show_quantity = this.config.show_quantity || null;
-        this.show_days = this.config.show_days || null;
+        this.show_days = this.config.show_days ?? null;
         this.show_assigned = this.config.show_assigned ?? true;
         this.show_track_button = this.config.show_track_button ?? true;
         this.show_last_tracked = this.config.show_last_tracked ?? true;
