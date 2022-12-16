@@ -424,15 +424,15 @@ class GrocyChoresCard extends LitElement {
     _isItemVisible(item) {
         let visible = false;
         
-        visible ||= item.__due_in_days == null;
-        visible &&= item.__type === "chore" ? this.show_chores_without_due : true;
-        visible &&= item.__type === "task" ? this.show_tasks_without_due : true;
+        visible = visible || (item.__due_in_days == null);
+        visible = visible && (item.__type === "chore" ? this.show_chores_without_due : true);
+        visible = visible && (item.__type === "task" ? this.show_tasks_without_due : true);
 
-        visible ||= item.__due_in_days < 0;
-        visible ||= item.__due_in_days <= this.show_days;
+        visible = visible || (item.__due_in_days < 0);
+        visible = visible || (item.__due_in_days <= this.show_days);
 
-        visible &&= this.filter !== undefined ? this._checkMatchNameFilter(item) : true;
-        visible &&= this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true;
+        visible = visible && (this.filter !== undefined ? this._checkMatchNameFilter(item) : true);
+        visible = visible && (this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true);
 
         return visible;
     }
