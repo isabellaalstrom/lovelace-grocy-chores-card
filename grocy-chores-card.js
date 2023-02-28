@@ -547,6 +547,13 @@ class GrocyChoresCard extends LitElement {
                 message: `${this._translate(action)} "${itemName}".`, duration: 3000
             });
         }
+        this._fireHaptic();
+    }
+    
+    _fireHaptic() {
+        const myevent = new Event("haptic", {bubbles: true, composed: true, cancelable: false});
+        myevent.detail = "success";
+        window.dispatchEvent(myevent);
     }
 
     _toggleOverflow(documentFragment) {
