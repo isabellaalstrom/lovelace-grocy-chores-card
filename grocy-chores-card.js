@@ -193,7 +193,7 @@ class GrocyChoresCard extends LitElement {
 
     _renderItem(item) {
         return html`
-            <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} info flex">
+            <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} info flex" id="${item.__type}${item.id}">
                 <div>
                     ${this._renderItemName(item)}
                     ${this._shouldRenderDueInDays(item) ? this._renderDueInDays(item) : nothing}
@@ -520,6 +520,9 @@ class GrocyChoresCard extends LitElement {
     }
 
     _trackChore(choreId, choreName) {
+        // Hide the chore immediately, for better visual feedback
+        const x = this.shadowRoot.getElementById(`chore${choreId}`);
+        x.style.display = "none";
         this._hass.callService("grocy", "execute_chore", {
             chore_id: choreId, done_by: this.userId
         });
@@ -527,6 +530,9 @@ class GrocyChoresCard extends LitElement {
     }
 
     _trackTask(taskId, taskName) {
+        // Hide the task immediately, for better visual feedback
+        const x = this.shadowRoot.getElementById(`task${taskId}`);
+        x.style.display = "none";
         this._hass.callService("grocy", "complete_task", {
             task_id: taskId
         });
