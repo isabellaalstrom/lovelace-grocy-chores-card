@@ -273,7 +273,7 @@ class GrocyChoresCard extends LitElement {
     _renderAddTaskButton() {
         return html`
             <mwc-button class="hide-button" @click=${() => this._toggleAddTask()}>
-                <ha-icon icon="mdi:chevron-down"></ha-icon>
+                <ha-icon icon="mdi:chevron-down" id="add-task-icon"></ha-icon>
                 ${this._translate("Add task")}
             </mwc-button>
         `
@@ -583,10 +583,13 @@ class GrocyChoresCard extends LitElement {
 
     _toggleAddTask() {
         const x = this.shadowRoot.getElementById("add-task-row");
+        const icon = this.shadowRoot.getElementById("add-task-icon");
         if (x.style.display === "none") {
             x.style.display = "flex";
+            icon.icon = "mdi:chevron-up";
         } else {
             x.style.display = "none";
+            icon.icon = "mdi:chevron-down";
         }
     }
 
