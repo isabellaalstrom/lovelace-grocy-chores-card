@@ -193,7 +193,7 @@ class GrocyChoresCard extends LitElement {
 
     _renderItem(item) {
         return html`
-            <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} info flex" id="${item.__type}${item.id}">
+            <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} ${this.local_cached_hidden_items.includes(`${item.__type}${item.id}`) ? "hidden-class" : "show-class"} info flex" id="${item.__type}${item.id}">
                 <div>
                     ${this._renderItemName(item)}
                     ${this._shouldRenderDueInDays(item) ? this._renderDueInDays(item) : nothing}
@@ -520,9 +520,9 @@ class GrocyChoresCard extends LitElement {
     }
 
     _trackChore(choreId, choreName) {
-        // Hide the chore immediately, for better visual feedback
-        const x = this.shadowRoot.getElementById(`chore${choreId}`);
-        x.style.display = "none";
+        // Hide the chore on the next render, for better visual feedback
+        this.local_cached_hidden_items.push(`chore${choreId}`);
+        this.requestUpdate();
         this._hass.callService("grocy", "execute_chore", {
             chore_id: choreId, done_by: this.userId
         });
@@ -530,9 +530,9 @@ class GrocyChoresCard extends LitElement {
     }
 
     _trackTask(taskId, taskName) {
-        // Hide the task immediately, for better visual feedback
-        const x = this.shadowRoot.getElementById(`task${taskId}`);
-        x.style.display = "none";
+        // Hide the task on the next render, for better visual feedback
+        this.local_cached_hidden_items.push(`task${taskId}`);
+        this.requestUpdate();
         this._hass.callService("grocy", "complete_task", {
             task_id: taskId
         });
@@ -659,6 +659,12 @@ class GrocyChoresCard extends LitElement {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
         }
+    }
+
+
+    constructor() {
+        super();
+        this.local_cached_hidden_items = []
     }
 
     // @TODO: This requires more intelligent logic
