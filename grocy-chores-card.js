@@ -557,9 +557,11 @@ class GrocyChoresCard extends LitElement {
     }
     
     _fireHaptic() {
-        const myevent = new Event("haptic", {bubbles: true, composed: true, cancelable: false});
-        myevent.detail = "success";
-        window.dispatchEvent(myevent);
+        if (this.haptic != null) {
+            const myevent = new Event("haptic", {bubbles: true, composed: true, cancelable: false});
+            myevent.detail = this.haptic;
+            window.dispatchEvent(myevent);
+        }
     }
 
     _toggleOverflow(documentFragment) {
@@ -652,6 +654,7 @@ class GrocyChoresCard extends LitElement {
         this.hide_text_with_no_data = this.config.hide_text_with_no_data ?? false;
         this.use_long_date = this.config.use_long_date ?? false;
         this.use_24_hours = this.config.use_24_hours ?? true;
+        this.haptic = this.config.haptic ?? "selection";
         this.task_icon = null
         this.chore_icon = null
         this.use_icons = this.config.use_icons ?? false;
