@@ -193,7 +193,7 @@ class GrocyChoresCard extends LitElement {
 
     _renderItem(item) {
         return html`
-            <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} info flex">
+            <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} ${this.local_cached_hidden_items.includes(`${item.__type}${item.id}`) ? "hidden-class" : "show-class"} info flex" id="${item.__type}${item.id}">
                 <div>
                     ${this._renderItemName(item)}
                     ${this._shouldRenderDueInDays(item) ? this._renderDueInDays(item) : nothing}
@@ -273,7 +273,7 @@ class GrocyChoresCard extends LitElement {
     _renderAddTaskButton() {
         return html`
             <mwc-button class="hide-button" @click=${() => this._toggleAddTask()}>
-                <ha-icon icon="mdi:chevron-down"></ha-icon>
+                <ha-icon icon="mdi:chevron-down" id="add-task-icon"></ha-icon>
                 ${this._translate("Add task")}
             </mwc-button>
         `
@@ -520,6 +520,9 @@ class GrocyChoresCard extends LitElement {
     }
 
     _trackChore(choreId, choreName) {
+        // Hide the chore on the next render, for better visual feedback
+        this.local_cached_hidden_items.push(`chore${choreId}`);
+        this.requestUpdate();
         this._hass.callService("grocy", "execute_chore", {
             chore_id: choreId, done_by: this.userId
         });
@@ -527,6 +530,9 @@ class GrocyChoresCard extends LitElement {
     }
 
     _trackTask(taskId, taskName) {
+        // Hide the task on the next render, for better visual feedback
+        this.local_cached_hidden_items.push(`task${taskId}`);
+        this.requestUpdate();
         this._hass.callService("grocy", "complete_task", {
             task_id: taskId
         });
@@ -546,6 +552,15 @@ class GrocyChoresCard extends LitElement {
             this._hass.callService("browser_mod", "notification", {
                 message: `${this._translate(action)} "${itemName}".`, duration: 3000
             });
+        }
+        this._fireHaptic();
+    }
+    
+    _fireHaptic() {
+        if (this.haptic != null) {
+            const myevent = new Event("haptic", {bubbles: true, composed: true, cancelable: false});
+            myevent.detail = this.haptic;
+            window.dispatchEvent(myevent);
         }
     }
 
@@ -570,10 +585,13 @@ class GrocyChoresCard extends LitElement {
 
     _toggleAddTask() {
         const x = this.shadowRoot.getElementById("add-task-row");
+        const icon = this.shadowRoot.getElementById("add-task-icon");
         if (x.style.display === "none") {
             x.style.display = "flex";
+            icon.icon = "mdi:chevron-up";
         } else {
             x.style.display = "none";
+            icon.icon = "mdi:chevron-down";
         }
     }
 
@@ -636,6 +654,7 @@ class GrocyChoresCard extends LitElement {
         this.hide_text_with_no_data = this.config.hide_text_with_no_data ?? false;
         this.use_long_date = this.config.use_long_date ?? false;
         this.use_24_hours = this.config.use_24_hours ?? true;
+        this.haptic = this.config.haptic ?? "selection";
         this.task_icon = null
         this.chore_icon = null
         this.use_icons = this.config.use_icons ?? false;
@@ -643,6 +662,12 @@ class GrocyChoresCard extends LitElement {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
         }
+    }
+
+
+    constructor() {
+        super();
+        this.local_cached_hidden_items = []
     }
 
     // @TODO: This requires more intelligent logic
