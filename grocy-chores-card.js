@@ -670,9 +670,15 @@ class GrocyChoresCard extends LitElement {
         this.local_cached_hidden_items = []
     }
 
-    // @TODO: This requires more intelligent logic
     getCardSize() {
-        return 3;
+        //an item seems to be about 70-80 pixels, depending on options, and a 'unit' of size is 50 pixels. 
+        if(Array.isArray(this.items)) {
+            let size = Math.floor(this.items.length * 3 / 2);
+            size = size < 3 ? 3 : size;
+            return size;
+        } else {
+            return 3;
+        }
     }
 }
 
