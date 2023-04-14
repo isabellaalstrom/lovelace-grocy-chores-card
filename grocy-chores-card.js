@@ -14,7 +14,7 @@ class GrocyChoresCard extends LitElement {
 
 
     _processItems() {
-        hass = this._hass;
+        let hass = this._hass;
         let allItems = [];
         this.entities = [];
         if(!hass) {
