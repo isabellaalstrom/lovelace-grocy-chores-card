@@ -196,6 +196,7 @@ class GrocyChoresCard extends LitElement {
             <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} ${this.local_cached_hidden_items.includes(`${item.__type}${item.id}`) ? "hidden-class" : "show-class"} info flex" id="${item.__type}${item.id}">
                 <div>
                     ${this._renderItemName(item)}
+                    ${this._renderItemDescription(item)}
                     ${this._shouldRenderDueInDays(item) ? this._renderDueInDays(item) : nothing}
                     ${this._shouldRenderAssignedToUser(item) ? this._renderAssignedToUser(item) : nothing}
                     ${this._shouldRenderLastTracked(item) ? this._renderLastTracked(item) : nothing}
@@ -269,6 +270,16 @@ class GrocyChoresCard extends LitElement {
             </div>
         `
     }
+
+    _renderItemDescription(item) {
+        return item.__description ? html`
+            <div class="secondary">
+                ${item.__description}
+            </div>
+        ` : nothing;
+    }
+
+
 
     _renderAddTaskButton() {
         return html`
@@ -457,6 +468,17 @@ class GrocyChoresCard extends LitElement {
         return item.__user_id && item.__user_id === this.filter_user;
     }
 
+    _formatItemDescription(item) {
+        let d = null;
+        if(this.show_description && item.description) {
+            d = item.description;
+            if(this.description_max_length && (d.length > this.description_max_length)) {
+                d = d.substring(0, this.description_max_length) + "...";
+            }
+        }
+        item.__description = d;
+    }
+
     _getTasks(entity) {
         if (entity.attributes.tasks === undefined) {
             return null;
@@ -476,9 +498,12 @@ class GrocyChoresCard extends LitElement {
                 item.__due_in_days = this._calculateDaysTillNow(item.__due_date);
             }
 
+            this._formatItemDescription(item);
+
             if (this._isItemVisible(item)) {
                 tasks.push(item);
             }
+
         });
 
         return tasks;
@@ -511,9 +536,12 @@ class GrocyChoresCard extends LitElement {
                 item.__last_tracked_days = Math.abs(this._calculateDaysTillNow(item.__last_tracked_date));
             }
 
+            this._formatItemDescription(item);
+
             if (this._isItemVisible(item)) {
                 chores.push(item);
             }
+
         });
 
         return chores;
@@ -641,7 +669,7 @@ class GrocyChoresCard extends LitElement {
         this.show_last_tracked_by = this.config.show_last_tracked_by ?? true;
         this.filter_category = this.config.filter_category ?? null;
         this.show_category = this.config.show_category ?? true;
-        this.show_description = this.config.show_description ?? true;
+        this.show_description = this.config.show_description ?? false;
         this.show_empty = this.config.show_empty ?? true;
         this.show_create_task = this.config.show_create_task ?? false;
         this.show_overflow = this.config.show_overflow || false;
@@ -661,6 +689,9 @@ class GrocyChoresCard extends LitElement {
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
+        }
+        if(this.show_description) {
+            this.description_max_length = this.config.description_max_length ?? null;
         }
     }
 
