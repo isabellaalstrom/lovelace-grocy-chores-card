@@ -162,7 +162,7 @@ class GrocyChoresCard extends LitElement {
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
                         <div slot="icon" style="width: 100%;">
-                            <span class="mdc-button__label">${this._translate(`${this.overflow.length} More Items`)}</span>
+                            <span class="mdc-button__label">${this._translate("{number} More Items", this.overflow.length)}</span>
                         </div>
                         <div slot="trailingIcon">
                             <ha-icon slot="trailingIcon" style="--mdc-icon-size: ${this.expand_icon_size}px;"
@@ -234,7 +234,7 @@ class GrocyChoresCard extends LitElement {
     _renderNrItemsInGrocy() {
         return html`
             <div class="secondary not-showing">
-                ${this._translate(`Look in Grocy for ${this.itemsNotVisible} more items`)}
+                ${this._translate("Look in Grocy for {number} more items", this.itemsNotVisible)}
             </div>
         `
     }
@@ -393,7 +393,7 @@ class GrocyChoresCard extends LitElement {
         } else if (dueInDays < 2) {
             return this._translate("Tomorrow");
         } else if (dueInDays < this.due_in_days_threshold) {
-            return this._translate(`In ${dueInDays} days`);
+            return this._translate("In {number} days", dueInDays);
         } else {
             return this._formatDate(dueDate, true);
         }
@@ -405,17 +405,21 @@ class GrocyChoresCard extends LitElement {
         } else if (lastTrackedDays < 2) {
             return this._translate("Yesterday");
         } else if (lastTrackedDays < this.last_tracked_days_threshold) {
-            return this._translate(`${lastTrackedDays} days ago`);
+            return this._translate("{number} days ago", lastTrackedDays);
         } else {
             return this._formatDate(lastTrackedDate, dateOnly);
         }
     }
 
-    _translate(string) {
+    _translate(string, number) {
+        let newString = string;
         if ((this.config.custom_translation != null) && (this.config.custom_translation[string] != null)) {
-            return this.config.custom_translation[string];
+            newString = this.config.custom_translation[string];
         }
-        return string;
+        if(number != null) {
+            newString = newString.replace("{number}", number.toString());
+        }
+        return newString;
     }
 
     _taskDueDateInputFormat() {
