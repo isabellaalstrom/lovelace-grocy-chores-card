@@ -8,10 +8,19 @@ class GrocyChoresCard extends LitElement {
     }
 
     set hass(hass) {
-        let allItems = [];
         this._hass = hass;
+        this._processItems();
+    }
+
+
+    _processItems() {
+        let hass = this._hass;
+        let allItems = [];
         this.entities = [];
         this.entities_not_found = [];
+        if(!hass) {
+            return;
+        }
         if (Array.isArray(this.config.entity)) {
             for (let i = 0; i < this.config.entity.length; ++i) {
                 this.entities[i] = this.config.entity[i] in hass.states ? hass.states[this.config.entity[i]] : null;
@@ -116,6 +125,7 @@ class GrocyChoresCard extends LitElement {
             throw new Error('Please define entity');
         }
         this.config = config;
+        this._processItems();
     }
 
     render() {
