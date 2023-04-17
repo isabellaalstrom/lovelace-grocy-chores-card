@@ -11,12 +11,19 @@ class GrocyChoresCard extends LitElement {
         let allItems = [];
         this._hass = hass;
         this.entities = [];
+        this.entities_not_found = [];
         if (Array.isArray(this.config.entity)) {
             for (let i = 0; i < this.config.entity.length; ++i) {
                 this.entities[i] = this.config.entity[i] in hass.states ? hass.states[this.config.entity[i]] : null;
+                if(this.entities[i] == null) {
+                    this.entities_not_found.push(this.config.entity[i]);
+                }
             }
         } else {
             this.entities[0] = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
+            if(this.entities[0] == null) {
+              this.entities_not_found.push(this.config.entity);
+            }
         }
 
         this.header = this.config.title == null ? "Todo" : this.config.title;
@@ -30,6 +37,10 @@ class GrocyChoresCard extends LitElement {
         for (let i = 0; i < this.entities.length; i++) {
             let entity = this.entities[i];
             let items;
+
+            if(!entity) {
+                continue;
+            }
 
             if (entity.state === 'unknown') {
                 console.warn("The Grocy sensor " + entity.entity_id + " is unknown.");
@@ -110,6 +121,9 @@ class GrocyChoresCard extends LitElement {
     render() {
         if (!this.entities) {
             return this._renderEntityNotFound();
+        }
+        for (let i = 0; i < this.entities_not_found.length; i++) {
+            return this._renderEntityNotFound(this.entities_not_found[i]);
         }
 
         if (this.items === undefined) {
@@ -207,10 +221,12 @@ class GrocyChoresCard extends LitElement {
         `
     }
 
-    _renderEntityNotFound() {
+    _renderEntityNotFound(entity) {
         return html`
             <hui-warning>
-                ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found", "entity", this.config.entity)}
+                ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found", "entity", entity ?? this.config.entity)}
+                <br>
+                ${this._translate(`Ensure you have the appropriate sensors enabled in your grocy integration.`)}
             </hui-warning>
         `
     }
