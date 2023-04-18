@@ -657,6 +657,7 @@ class GrocyChoresCard extends LitElement {
         this.haptic = this.config.haptic ?? "selection";
         this.task_icon = null
         this.chore_icon = null
+        this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
@@ -671,11 +672,13 @@ class GrocyChoresCard extends LitElement {
     }
 
     getCardSize() {
+        if(this.fixed_tiling_size != null) {
+            return this.fixed_tiling_size;
+        }
         //an item seems to be about 70-80 pixels, depending on options, and a 'unit' of size is 50 pixels. 
         if(Array.isArray(this.items)) {
             let size = Math.floor(this.items.length * 3 / 2);
-            size = size < 3 ? 3 : size;
-            return size;
+            return size || 1;
         } else {
             return 3;
         }
