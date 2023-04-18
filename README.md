@@ -69,7 +69,7 @@ views:
 | haptic                       | string      | **Optional** | `selection` | Can be set to `light`, `success`, or anything [listed here](https://companion.home-assistant.io/docs/integrations/haptics/#developers-integrating-haptics-into-custom-cards).                                                     |
 | show_description             | bool        | **Optional** | `false`  | When true, show the chore/task descriptions under the name. |
 | description_max_length       | number      | **Optional** |          | When set and `show_description` is set, truncate shown descriptions to the number of characters specified. |
-| fixed_tiling_size            | number      | **Optional** |          | When set, provides a fixed value to the masonry tiling algorithm for card size, where 1 unit equals 50 pixels. When unset, calculate the size dynamically from the number of items in the todo list. Setting the value will give a more consistent layout of masonry elements, though they may not be well balanced. When unset, the cards will be more compactly tiled for layout, but may move around on page refresh as as list length changes.
+| fixed_tiling_size            | number      | **Optional** |          | When set, provides a fixed value to the masonry tiling algorithm for card size, where 1 unit equals 50 pixels. When unset, calculate the size dynamically from the number of items in the todo list. Setting the value will give a more consistent layout of masonry elements, though they may not be well balanced. When unset, the cards will be more compactly tiled for layout, but may move around on page refresh as list length changes.
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
