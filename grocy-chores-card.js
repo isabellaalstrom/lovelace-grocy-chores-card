@@ -8,15 +8,31 @@ class GrocyChoresCard extends LitElement {
     }
 
     set hass(hass) {
-        let allItems = [];
         this._hass = hass;
+        this._processItems();
+    }
+
+
+    _processItems() {
+        let hass = this._hass;
+        let allItems = [];
         this.entities = [];
+        this.entities_not_found = [];
+        if(!hass) {
+            return;
+        }
         if (Array.isArray(this.config.entity)) {
             for (let i = 0; i < this.config.entity.length; ++i) {
                 this.entities[i] = this.config.entity[i] in hass.states ? hass.states[this.config.entity[i]] : null;
+                if(this.entities[i] == null) {
+                    this.entities_not_found.push(this.config.entity[i]);
+                }
             }
         } else {
             this.entities[0] = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
+            if(this.entities[0] == null) {
+              this.entities_not_found.push(this.config.entity);
+            }
         }
 
         this.header = this.config.title == null ? "Todo" : this.config.title;
@@ -30,6 +46,10 @@ class GrocyChoresCard extends LitElement {
         for (let i = 0; i < this.entities.length; i++) {
             let entity = this.entities[i];
             let items;
+
+            if(!entity) {
+                continue;
+            }
 
             if (entity.state === 'unknown') {
                 console.warn("The Grocy sensor " + entity.entity_id + " is unknown.");
@@ -105,11 +125,15 @@ class GrocyChoresCard extends LitElement {
             throw new Error('Please define entity');
         }
         this.config = config;
+        this._processItems();
     }
 
     render() {
         if (!this.entities) {
             return this._renderEntityNotFound();
+        }
+        for (let i = 0; i < this.entities_not_found.length; i++) {
+            return this._renderEntityNotFound(this.entities_not_found[i]);
         }
 
         if (this.items === undefined) {
@@ -148,7 +172,7 @@ class GrocyChoresCard extends LitElement {
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
                         <div slot="icon" style="width: 100%;">
-                            <span class="mdc-button__label">${this._translate(`${this.overflow.length} More Items`)}</span>
+                            <span class="mdc-button__label">${this._translate("{number} More Items", this.overflow.length)}</span>
                         </div>
                         <div slot="trailingIcon">
                             <ha-icon slot="trailingIcon" style="--mdc-icon-size: ${this.expand_icon_size}px;"
@@ -196,6 +220,7 @@ class GrocyChoresCard extends LitElement {
             <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} ${this.local_cached_hidden_items.includes(`${item.__type}${item.id}`) ? "hidden-class" : "show-class"} info flex" id="${item.__type}${item.id}">
                 <div>
                     ${this._renderItemName(item)}
+                    ${this._renderItemDescription(item)}
                     ${this._shouldRenderDueInDays(item) ? this._renderDueInDays(item) : nothing}
                     ${this._shouldRenderAssignedToUser(item) ? this._renderAssignedToUser(item) : nothing}
                     ${this._shouldRenderLastTracked(item) ? this._renderLastTracked(item) : nothing}
@@ -206,10 +231,12 @@ class GrocyChoresCard extends LitElement {
         `
     }
 
-    _renderEntityNotFound() {
+    _renderEntityNotFound(entity) {
         return html`
             <hui-warning>
-                ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found", "entity", this.config.entity)}
+                ${this._hass.localize("ui.panel.lovelace.warning.entity_not_found", "entity", entity ?? this.config.entity)}
+                <br>
+                ${this._translate(`Ensure you have the appropriate sensors enabled in your grocy integration.`)}
             </hui-warning>
         `
     }
@@ -217,7 +244,7 @@ class GrocyChoresCard extends LitElement {
     _renderNrItemsInGrocy() {
         return html`
             <div class="secondary not-showing">
-                ${this._translate(`Look in Grocy for ${this.itemsNotVisible} more items`)}
+                ${this._translate("Look in Grocy for {number} more items", this.itemsNotVisible)}
             </div>
         `
     }
@@ -269,6 +296,16 @@ class GrocyChoresCard extends LitElement {
             </div>
         `
     }
+
+    _renderItemDescription(item) {
+        return item.__description ? html`
+            <div class="secondary">
+                ${item.__description}
+            </div>
+        ` : nothing;
+    }
+
+
 
     _renderAddTaskButton() {
         return html`
@@ -366,7 +403,7 @@ class GrocyChoresCard extends LitElement {
         } else if (dueInDays < 2) {
             return this._translate("Tomorrow");
         } else if (dueInDays < this.due_in_days_threshold) {
-            return this._translate(`In ${dueInDays} days`);
+            return this._translate("In {number} days", dueInDays);
         } else {
             return this._formatDate(dueDate, true);
         }
@@ -378,17 +415,21 @@ class GrocyChoresCard extends LitElement {
         } else if (lastTrackedDays < 2) {
             return this._translate("Yesterday");
         } else if (lastTrackedDays < this.last_tracked_days_threshold) {
-            return this._translate(`${lastTrackedDays} days ago`);
+            return this._translate("{number} days ago", lastTrackedDays);
         } else {
             return this._formatDate(lastTrackedDate, dateOnly);
         }
     }
 
-    _translate(string) {
+    _translate(string, number) {
+        let newString = string;
         if ((this.config.custom_translation != null) && (this.config.custom_translation[string] != null)) {
-            return this.config.custom_translation[string];
+            newString = this.config.custom_translation[string];
         }
-        return string;
+        if(number != null) {
+            newString = newString.replace("{number}", number.toString());
+        }
+        return newString;
     }
 
     _taskDueDateInputFormat() {
@@ -424,12 +465,15 @@ class GrocyChoresCard extends LitElement {
     _isItemVisible(item) {
         let visible = false;
         
-        visible = visible || (item.__due_in_days == null);
-        visible = visible && (item.__type === "chore" ? this.show_chores_without_due : true);
-        visible = visible && (item.__type === "task" ? this.show_tasks_without_due : true);
-
-        visible = visible || (item.__due_in_days < 0);
-        visible = visible || (item.__due_in_days <= this.show_days);
+        if(item.__due_in_days == null) {
+            visible = true;
+            visible = visible && (item.__type === "chore" ? this.show_chores_without_due : true);
+            visible = visible && (item.__type === "task" ? this.show_tasks_without_due : true);
+        } else {
+            visible = visible || this.show_days == null;
+            visible = visible || (item.__due_in_days < 0);
+            visible = visible || (item.__due_in_days <= this.show_days);
+        }
 
         visible = visible && (this.filter !== undefined ? this._checkMatchNameFilter(item) : true);
         visible = visible && (this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true);
@@ -457,6 +501,17 @@ class GrocyChoresCard extends LitElement {
         return item.__user_id && item.__user_id === this.filter_user;
     }
 
+    _formatItemDescription(item) {
+        let d = null;
+        if(this.show_description && item.description) {
+            d = item.description;
+            if(this.description_max_length && (d.length > this.description_max_length)) {
+                d = d.substring(0, this.description_max_length) + "...";
+            }
+        }
+        item.__description = d;
+    }
+
     _getTasks(entity) {
         if (entity.attributes.tasks === undefined) {
             return null;
@@ -476,9 +531,12 @@ class GrocyChoresCard extends LitElement {
                 item.__due_in_days = this._calculateDaysTillNow(item.__due_date);
             }
 
+            this._formatItemDescription(item);
+
             if (this._isItemVisible(item)) {
                 tasks.push(item);
             }
+
         });
 
         return tasks;
@@ -511,9 +569,12 @@ class GrocyChoresCard extends LitElement {
                 item.__last_tracked_days = Math.abs(this._calculateDaysTillNow(item.__last_tracked_date));
             }
 
+            this._formatItemDescription(item);
+
             if (this._isItemVisible(item)) {
                 chores.push(item);
             }
+
         });
 
         return chores;
@@ -641,7 +702,7 @@ class GrocyChoresCard extends LitElement {
         this.show_last_tracked_by = this.config.show_last_tracked_by ?? true;
         this.filter_category = this.config.filter_category ?? null;
         this.show_category = this.config.show_category ?? true;
-        this.show_description = this.config.show_description ?? true;
+        this.show_description = this.config.show_description ?? false;
         this.show_empty = this.config.show_empty ?? true;
         this.show_create_task = this.config.show_create_task ?? false;
         this.show_overflow = this.config.show_overflow || false;
@@ -661,6 +722,9 @@ class GrocyChoresCard extends LitElement {
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
+        }
+        if(this.show_description) {
+            this.description_max_length = this.config.description_max_length ?? null;
         }
     }
 
