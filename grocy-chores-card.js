@@ -741,8 +741,7 @@ class GrocyChoresCard extends LitElement {
         }
         //an item seems to be about 70-80 pixels, depending on options, and a 'unit' of size is 50 pixels. 
         if(Array.isArray(this.items)) {
-            let size = Math.floor(this.items.length * 3 / 2);
-            return size || 1;
+            return Math.floor(this.items.length * 3 / 2) || 1;
         } else {
             return 3;
         }
