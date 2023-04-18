@@ -67,6 +67,8 @@ views:
 | use_24_hours                 | bool        | **Optional** | `true`   | Sets if the times are shown in 12 hour or 24 hour formats.                                                                                                                                                                           |
 | hide_text_with_no_data       | bool        | **Optional** | `false`  | When true, if a property for an item is not set, it hides the text. For example, if a chore has never been completed, instead of showing 'Last tracked: -', it will hide the 'Last tracked' row entirely.                            |
 | haptic                       | string      | **Optional** | `selection` | Can be set to `light`, `success`, or anything [listed here](https://companion.home-assistant.io/docs/integrations/haptics/#developers-integrating-haptics-into-custom-cards).                                                     |
+| show_description             | bool        | **Optional** | `false`  | When true, show the chore/task descriptions under the name. |
+| description_max_length       | number      | **Optional** |          | When set and `show_description` is set, truncate shown descriptions to the number of characters specified. |
 
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
