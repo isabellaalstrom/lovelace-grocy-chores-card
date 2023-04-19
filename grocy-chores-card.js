@@ -472,7 +472,15 @@ class GrocyChoresCard extends LitElement {
         } else {
             visible = visible || this.show_days == null;
             visible = visible || (item.__due_in_days < 0);
-            visible = visible || (item.__due_in_days <= this.show_days);
+
+            if(this.show_days != null) {
+                const days_range = typeof this.show_days === "number" ? [this.show_days] : this.show_days.split("..", 2);
+                if(days_range.length === 1) {
+                    visible = visible || (item.__due_in_days <= days_range[0]);
+                } else {
+                    visible = visible || ((item.__due_in_days <= days_range[1]) && (item.__due_in_days >= days_range[0]));
+                }
+            }
         }
 
         visible = visible && (this.filter !== undefined ? this._checkMatchNameFilter(item) : true);
