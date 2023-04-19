@@ -482,16 +482,17 @@ class GrocyChoresCard extends LitElement {
     }
 
     _checkMatchNameFilter(item) {
-        if (Array.isArray(this.filter)) {
-            return this.filter.some(e => item.name.includes(e)); // Item name matches any filter value
-        }
-
-        if (!item.name.includes(this.filter)) {
+        let filter = [].concat(this.filter);
+        let match = filter.some(e => item.name.includes(e)); // Item name matches any filter value
+        if(!match) {
             return false;
         }
 
         if (this.remove_filter) {
-            item.__filtered_name = item.name.replace(this.filter, "");
+            item.__filtered_name = item.name;
+            for(let i=0; i<filter.length; i++) {
+                item.__filtered_name = item.__filtered_name.replace(filter[i], "");
+            }
         }
 
         return true;
