@@ -478,6 +478,10 @@ class GrocyChoresCard extends LitElement {
         visible = visible && (this.filter !== undefined ? this._checkMatchNameFilter(item) : true);
         visible = visible && (this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true);
 
+        if(item.__type === "task" && this.filter_task_category !== undefined) {
+            visible = visible && this._checkMatchTaskCategoryFilter(item);
+        }
+
         return visible;
     }
 
@@ -500,6 +504,11 @@ class GrocyChoresCard extends LitElement {
 
     _checkMatchUserFilter(item) {
         return item.__user_id && item.__user_id === this.filter_user;
+    }
+
+    _checkMatchTaskCategoryFilter(item) {
+        let filter = [].concat(this.filter_task_category);
+        return filter.some(id => item.category_id === id);
     }
 
     _formatItemDescription(item) {
@@ -692,6 +701,7 @@ class GrocyChoresCard extends LitElement {
         this.userId = this.config.user_id ?? 1;
         this.filter = this.config.filter;
         this.filter_user = this.config.filter_user;
+        this.filter_task_category = this.config.filter_task_category;
         this.remove_filter = this.config.remove_filter ?? false;
         this.show_quantity = this.config.show_quantity || null;
         this.show_days = this.config.show_days ?? null;
