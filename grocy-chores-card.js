@@ -167,7 +167,7 @@ class GrocyChoresCard extends LitElement {
 
     _renderOverflow() {
         return html`
-            <div class="name more-items-title show-class">
+            <div class="name more-items-title overflow-toggle show-class">
                 <div>
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
@@ -182,11 +182,11 @@ class GrocyChoresCard extends LitElement {
                 </div>
             </div>
 
-            <div class="card-content card-overflow-content hidden-class">
+            <div class="card-content card-overflow-content overflow-toggle hidden-class">
                 ${this._renderItems(this.overflow)}
             </div>
 
-            <div class="name more-items-title hidden-class">
+            <div class="name more-items-title overflow-toggle hidden-class">
                 <div>
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
@@ -645,8 +645,8 @@ class GrocyChoresCard extends LitElement {
 
     _toggleOverflow(documentFragment) {
         let element;
-        const elementsHidden = documentFragment.querySelectorAll('.hidden-class');
-        const elementsShown = documentFragment.querySelectorAll('.show-class');
+        const elementsHidden = documentFragment.querySelectorAll('.hidden-class.overflow-toggle');
+        const elementsShown = documentFragment.querySelectorAll('.show-class.overflow-toggle');
 
         for (element in elementsHidden) {
             if (elementsHidden.hasOwnProperty(element)) {
