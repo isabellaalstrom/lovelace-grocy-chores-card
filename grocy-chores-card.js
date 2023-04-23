@@ -7,9 +7,31 @@ class GrocyChoresCard extends LitElement {
         return style;
     }
 
+    _needUpdate(hass) {
+        const oldHass = this._hass;
+        if(oldHass == null) {
+            return true;
+        }
+        let entities = [].concat(this.config.entity);
+        for(let i=0; i<entities.length; i++) {
+            let e = entities[i];
+            if(e in hass.states) {
+                if(!e in oldHass.states) {
+                    return true;
+                }
+                if(hass.states[e] != oldHass.states[e]) {
+                    return true;
+                }
+            }
+        }
+    }
+
     set hass(hass) {
+        let update = this._needUpdate(hass);
         this._hass = hass;
-        this._processItems();
+        if(update) {
+            this._processItems();
+        }
     }
 
 
@@ -40,6 +62,7 @@ class GrocyChoresCard extends LitElement {
         this._configSetup();
 
         if (!Array.isArray(this.entities)) {
+            this.requestUpdate();
             return;
         }
 
@@ -66,6 +89,7 @@ class GrocyChoresCard extends LitElement {
         }
 
         if (allItems.length === 0) {
+            this.requestUpdate();
             return;
         }
 
