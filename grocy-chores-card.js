@@ -511,7 +511,8 @@ class GrocyChoresCard extends LitElement {
     }
 
     _checkMatchUserFilter(item) {
-        return item.__user_id && item.__user_id === this.filter_user;
+        let user = this.filter_user === "current" ? this._getUserId() : this.filter_user;
+        return item.__user_id && item.__user_id === user;
     }
 
     _checkMatchTaskCategoryFilter(item) {
@@ -598,12 +599,20 @@ class GrocyChoresCard extends LitElement {
         return chores;
     }
 
+    _getUserId() {
+        if(typeof this.userId === "object") {
+            return this.userId[this._hass?.user?.name] ?? this.userId.default ?? 1;
+        } else {
+            return this.userId ?? 1;
+        }
+    }
+
     _trackChore(choreId, choreName) {
         // Hide the chore on the next render, for better visual feedback
         this.local_cached_hidden_items.push(`chore${choreId}`);
         this.requestUpdate();
         this._hass.callService("grocy", "execute_chore", {
-            chore_id: choreId, done_by: this.userId
+            chore_id: choreId, done_by: this._getUserId()
         });
         this._showTrackedToast(choreName);
     }
@@ -694,7 +703,7 @@ class GrocyChoresCard extends LitElement {
             taskData["due_date"] = taskDueDate;
         }
 
-        taskData["assigned_to_user_id"] = this.userId;
+        taskData["assigned_to_user_id"] = this._getUserId();
 
         this._hass.callService("grocy", "add_generic", {
             entity_type: "tasks", data: taskData
