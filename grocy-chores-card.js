@@ -73,6 +73,7 @@ class GrocyChoresCard extends LitElement {
             return x !== undefined;
         });
 
+        if(!this.custom_sort) {
         allItems.sort(function (a, b) {
             if (a.__due_date == null) {
                 return -1;
@@ -82,6 +83,33 @@ class GrocyChoresCard extends LitElement {
 
             return a.__due_date - b.__due_date;
         });
+        } else {
+            let sort = [].concat(this.custom_sort);
+            sort = sort.filter(x=>x);
+            for(let i=0; i< sort.length; i++) {
+                if(typeof sort[i] === "object") {
+                    let d = sort[i].direction;
+                    sort[i] = {field: sort[i].field ?? "",
+                               direction: typeof d === "string" && d.startsWith("d") ? -1 : 1};
+                }
+                if(typeof sort[i] === "string") {
+                    sort[i] = {field: sort[i], direction: 1}
+                }
+            }
+            sort = sort.filter(x=>x.field !== "");
+            allItems.sort(function (a, b) {
+                for(let i=0; i< sort.length; i++) {
+                    let f = sort[i].field;
+                    if(a[f] < b[f]) {
+                        return -1 * sort[i].direction;
+                    }
+                    if(b[f] < a[f]) {
+                        return 1 * sort[i].direction;
+                    }
+                }
+                return 0;
+            });
+        }
 
         this.itemsNotVisible = 0;
         this.overflow = [];
@@ -737,6 +765,7 @@ class GrocyChoresCard extends LitElement {
         this.haptic = this.config.haptic ?? "selection";
         this.task_icon = null
         this.chore_icon = null
+        this.custom_sort = this.config.custom_sort;
         this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
         if (this.use_icons) {
