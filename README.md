@@ -92,15 +92,6 @@ custom_translation:
   Tracked: "Färdigställt"
 ```
 
-## <a name="user_id"></a> How to get the correct user id?
-Currently, [this issue in Grocy](https://github.com/grocy/grocy/issues/1260) results in only being able to track chores for the user id that created the api key used in the integration in Home Assistant. The issue is fixed but not yet released. In the meantime, follow these instructions to get the correct user id to be able to track chores from the card:
-
-1. Login to Grocy. Go to `http://yourgrocyip:port/manageapikeys`
-2. Note which user has created the api key used with the HA integration.
-3. Go to `http://yourgrocyip:port/api/users`
-4. Find the user that corresponds to the user who created the api key in step 2.
-5. Note the id for that user. If the id is not `1` you need to specify `user_id` to that user id in the cards configuration to be able to track tasks and chores.
-
 ## Using the Collapsible Overflow
 Instead of the “Look in Grocy for X more items” text from older versions, this version can show all additional items in a collapsible overflow panel.
 
