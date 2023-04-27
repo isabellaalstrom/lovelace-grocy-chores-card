@@ -383,6 +383,7 @@ class GrocyChoresCard extends LitElement {
                 <paper-input
                         id="add-date"
                         class="add-input"
+                        type="date"
                         no-label-float
                         placeholder=${this._translate("Optional due date")}
                         value="${this._taskDueDateInputFormat()}">
