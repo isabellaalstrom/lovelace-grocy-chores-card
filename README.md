@@ -41,11 +41,11 @@ views:
 | show_days                    | number/range | **Optional** |          | E.g. `0` to only show items that are due today, overdue or have no due date. If a range is specified show only tasks with a due date in that range; e.g. `1..10` would show tasks due in the next 10 days, but not overdue tasks, or tasks due today. If not specified, shows all items.                                                                                                                      |
 | show_chores_without_due      | bool        | **Optional** | `true`   | Show chores that do not have a due date.                                                                                                                                                                                             |
 | show_tasks_without_due       | bool        | **Optional** | `true`   | Show tasks that do not have a due date.                                                                                                                                                                                              |
-| user_id                      | number      | **Optional** | `1`      | Id of the Grocy user performing the items. Default if not specified is `1`. |
+| user_id                      | number/map  | **Optional** | `1`      | Id of the Grocy user performing the items. Default if not specified is `1`. A map may also be specified, see [here](#user_id)|
 | custom_translation           | string-list | **Optional** |          | List of translations of string values used in the card (see below).                                                                                                                                                                  |
 | filter                       | string/list | **Optional** |          | Only show items that contains this filter in the name. When filter is a list, filters are applied as OR.                                                                                                                             |
 | remove_filter                | bool        | **Optional** |          | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".                                |
-| filter_user                  | number      | **Optional** |          | Only show items assigned to the user with this user_id. Ex: `1`                                                                                                                                                                      |
+| filter_user                  | number      | **Optional** |          | Only show items assigned to the user with this user_id. Ex: `1`. If a user_id map is defined, `current` may be used instead of a number, in which case only items assigned to the current home-assistant user are shown.                                                                                                                                                                      |
 | filter_task_category         | number/list | **Optional** |          | Only show tasks with select category_ids. When filter is a list, filters are applied as OR. Ex: `1` |
 | show_assigned                | bool        | **Optional** | `true`   | Show who's assigned to the item (does not work on tasks).                                                                                                                                                                            |
 | show_last_tracked            | bool        | **Optional** | `true`   | Show when someone last tracked this chore (does not work on tasks).                                                                                                                                                                  |
@@ -71,7 +71,7 @@ views:
 | show_description             | bool        | **Optional** | `false`  | When true, show the chore/task descriptions under the name. |
 | description_max_length       | number      | **Optional** |          | When set and `show_description` is set, truncate shown descriptions to the number of characters specified. |
 | fixed_tiling_size            | number      | **Optional** |          | When set, provides a fixed value to the masonry tiling algorithm for card size, where 1 unit equals 50 pixels. When unset, calculate the size dynamically from the number of items in the todo list. Setting the value will give a more consistent layout of masonry elements, though they may not be well balanced. When unset, the cards will be more compactly tiled for layout, but may move around on page refresh as list length changes.
-
+| custom_sort            | string/map      | **Optional** |          | Modifies the sort order. See [here](#custom_sort) for details.
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
 
@@ -91,6 +91,50 @@ custom_translation:
   "'Name' can't be empty": "Fyll i namn"
   Tracked: "Färdigställt"
 ```
+
+## <a name="user_id"></a> Multi-User Support
+If your Home Assistant/Grocy installation supports multiple users, this card can handle multiple users. To enable this, specify a map in the configuration, mapping the userid of each home assistant user to their grocy user-id, e.g.:
+
+```
+user_id:
+  bob: 1
+  alice: 2
+  default: 1
+```
+In this example, home-assistant user "bob" has a grocy userid of 1, and home-assistant user "alice" has a grocy userid of 2. 
+Then when Bob is logged into home assistant, chores/tasks will be tracked as userid 1, and when Alice is logged in, they will be tracked as userid 2.
+A `default` value may also be specified, specifying the userid to use for any Home Assistant user not otherwise specified.
+
+This also affects the behavior of filter_user. Specifying `filter_user: current` in the config will only show chores/tasks for the currently logged in user. 
+
+## <a name="custom_sort"></a> Custom Sorting
+
+By default, the card sorts items with the soonest due chores/tasks first. This can be modified by adding a `custom_sort` key to the configuration. The card can sort on any property available in the individual items, and it can sort on multiple indices, in ascending (default) or descending order.
+
+### Sort Examples
+The current sort algorithm, sorting by due_date, ascending.
+`custom_sort: __due_date`
+
+Sort alphabetically by name:
+`custom_sort: name`
+
+Sort by user_id, then sort by due_date
+```
+custom_sort:
+  - user_id
+  - __due_date
+```
+Sort by category_id (descending), then by user_id, then by due date (descending)
+```
+custom_sort:
+  - field: category_id
+    direction: descending
+  - user_id
+  - field: __due_date
+    direction: descending
+```
+
+The exact fields available for sort are tied into the card implementation and may change in the future without notice. To see the full list of fields that are available, review the source code or use the browser debugger to inspect what keys of the item object are available for sorting. Note tasks and chores may support different keys, so they may not sort as expected if you show both and use a sort key that is not available for both.
 
 ## Using the Collapsible Overflow
 Instead of the “Look in Grocy for X more items” text from older versions, this version can show all additional items in a collapsible overflow panel.
