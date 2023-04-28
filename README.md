@@ -41,7 +41,7 @@ views:
 | show_days                    | number/range | **Optional** |          | E.g. `0` to only show items that are due today, overdue or have no due date. If a range is specified show only tasks with a due date in that range; e.g. `1..10` would show tasks due in the next 10 days, but not overdue tasks, or tasks due today. If not specified, shows all items.                                                                                                                      |
 | show_chores_without_due      | bool        | **Optional** | `true`   | Show chores that do not have a due date.                                                                                                                                                                                             |
 | show_tasks_without_due       | bool        | **Optional** | `true`   | Show tasks that do not have a due date.                                                                                                                                                                                              |
-| user_id                      | number      | **Optional** | `1`      | Id of the Grocy user performing the items. Default if not specified is `1`. See further instructions [here](#user_id).                                                                                                               |
+| user_id                      | number      | **Optional** | `1`      | Id of the Grocy user performing the items. Default if not specified is `1`. |
 | custom_translation           | string-list | **Optional** |          | List of translations of string values used in the card (see below).                                                                                                                                                                  |
 | filter                       | string/list | **Optional** |          | Only show items that contains this filter in the name. When filter is a list, filters are applied as OR.                                                                                                                             |
 | remove_filter                | bool        | **Optional** |          | Use together with `filter` to remove the filter from the name when showing in card. Chore name "Yard work: Clean rain gutters" with filter "Yard work: " will then only display "Clean rain gutters".                                |
@@ -91,15 +91,6 @@ custom_translation:
   "'Name' can't be empty": "Fyll i namn"
   Tracked: "Färdigställt"
 ```
-
-## <a name="user_id"></a> How to get the correct user id?
-Currently, [this issue in Grocy](https://github.com/grocy/grocy/issues/1260) results in only being able to track chores for the user id that created the api key used in the integration in Home Assistant. The issue is fixed but not yet released. In the meantime, follow these instructions to get the correct user id to be able to track chores from the card:
-
-1. Login to Grocy. Go to `http://yourgrocyip:port/manageapikeys`
-2. Note which user has created the api key used with the HA integration.
-3. Go to `http://yourgrocyip:port/api/users`
-4. Find the user that corresponds to the user who created the api key in step 2.
-5. Note the id for that user. If the id is not `1` you need to specify `user_id` to that user id in the cards configuration to be able to track tasks and chores.
 
 ## Using the Collapsible Overflow
 Instead of the “Look in Grocy for X more items” text from older versions, this version can show all additional items in a collapsible overflow panel.
