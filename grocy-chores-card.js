@@ -565,7 +565,7 @@ class GrocyChoresCard extends LitElement {
 
     _checkMatchUserFilter(item) {
         let user = this.filter_user === "current" ? this._getUserId() : this.filter_user;
-        return item.__user_id && item.__user_id === user;
+        return item.__user_id === user;
     }
 
     _checkMatchTaskCategoryFilter(item) {
