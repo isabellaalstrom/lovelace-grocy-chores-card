@@ -93,7 +93,7 @@ custom_translation:
 ```
 
 ## <a name="user_id"></a> Multi-User Support
-If your Home Assistant/Grocy installation supports multiple users, this card can handle multiple users. To enable this, specify a map in the configuration, mapping the userid of each home assistant user to their grocy user-id, e.g.:
+If your Home Assistant/Grocy installation supports multiple users, this card can handle multiple users. To enable this, specify a map in the configuration, mapping the names of each home assistant user to their grocy user-id, e.g.:
 
 ```
 user_id:
@@ -103,7 +103,11 @@ user_id:
 ```
 In this example, home-assistant user "bob" has a grocy userid of 1, and home-assistant user "alice" has a grocy userid of 2. 
 Then when Bob is logged into home assistant, chores/tasks will be tracked as userid 1, and when Alice is logged in, they will be tracked as userid 2.
+
+Note that this name on the left hand side is the user's home assistant display name, not the login/userid.
+
 A `default` value may also be specified, specifying the userid to use for any Home Assistant user not otherwise specified.
+
 
 This also affects the behavior of filter_user. Specifying `filter_user: current` in the config will only show chores/tasks for the currently logged in user. 
 
