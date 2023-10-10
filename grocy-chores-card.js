@@ -302,14 +302,14 @@ class GrocyChoresCard extends LitElement {
     }
 
     _shouldRenderAssignedToUser(item) {
-        return this.show_assigned && item.next_execution_assigned_user != null;
+        return this.show_assigned && item.assigned_to_name != null;
     }
 
     _renderAssignedToUser(item) {
         return html`
             <div class="secondary">
                 ${this._translate("Assigned to")}:
-                ${item.next_execution_assigned_user.display_name}
+                ${item.assigned_to_name}
             </div>
         `
     }
@@ -597,7 +597,12 @@ class GrocyChoresCard extends LitElement {
         const tasks = [];
         items.map(item => {
             item.__type = "task";
-            item.__user_id = item.assigned_to_user_id;
+            
+            if (item.assigned_to_user) {
+                item.__user_id = item.assigned_to_user.id;
+                item.assigned_to_name = item.assigned_to_user.display_name;
+            }
+            
             if (item.due_date != null) {
                 item.__due_date = this._toDateTime(item.due_date);
                 item.__due_in_days = this._calculateDaysTillNow(item.__due_date);
@@ -629,6 +634,7 @@ class GrocyChoresCard extends LitElement {
             item.__type = "chore";
             if (item.next_execution_assigned_user) {
                 item.__user_id = item.next_execution_assigned_user.id;
+                item.assigned_to_name = item.next_execution_assigned_user.display_name;
             }
 
             if (item.next_estimated_execution_time != null && item.next_estimated_execution_time.slice(0, 4) !== 2999) {
