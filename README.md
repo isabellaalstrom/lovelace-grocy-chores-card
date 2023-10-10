@@ -206,8 +206,7 @@ In general, this update aims to not change any default setups so that anyone usi
     - `--secondary-text-color` for the color.
 
 ## Known Issues
-1. Add Task area is incomplete and setting the `show_add_task` flag to `true` causes the card to disappear. (Add Task card has errors from main branch)
-2. Due/Completed dates with the time values 23:59:59 or 00:00:00 will not show the times. This is because those are the default values populated when no time is set.
+1. Due/Completed dates with the time values 23:59:59 or 00:00:00 will not show the times. This is because those are the default values populated when no time is set.
 
 ---
 
