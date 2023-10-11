@@ -1,4 +1,4 @@
-import {css} from "https://unpkg.com/lit?module";
+import {css} from "https://unpkg.com/lit@2.8.0?module";
 
 const style = css`
 

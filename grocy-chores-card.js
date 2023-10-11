@@ -1,4 +1,4 @@
-import {html, LitElement, nothing} from "https://unpkg.com/lit?module";
+import {html, LitElement, nothing} from "https://unpkg.com/lit@2.8.0?module";
 import {DateTime} from "https://unpkg.com/luxon@3.0.3?module";
 import style from './style.js';
 
