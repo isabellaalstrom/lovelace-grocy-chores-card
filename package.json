@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "lit": "^3.0.0",
+    "luxon": "^3.0.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3"
+  },
+  "scripts": {
+    "build" : "rollup --config rollup.config.mjs"
+  }
+}
