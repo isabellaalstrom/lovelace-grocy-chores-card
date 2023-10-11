@@ -14,7 +14,7 @@ jobs:
       # Build
       - name: Build the file
         run: |
-          cd /home/runner/work/grocy-chores-card/grocy-chores-card
+          cd /home/runner/work/lovelace-grocy-chores-card/lovelace-grocy-chores-card
           npm install
           npm run build
 
@@ -24,7 +24,7 @@ jobs:
 
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: /home/runner/work/grocy-chores-card/grocy-chores-card/output/grocy-chores-card.js
+          file: /home/runner/work/lovelace-grocy-chores-card/lovelace-grocy-chores-card/output/grocy-chores-card.js
           asset_name: grocy-chores-card-pkg.js
           tag: ${{ github.ref }}
           overwrite: true
