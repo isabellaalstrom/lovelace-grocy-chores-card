@@ -1,5 +1,5 @@
-import {html, LitElement, nothing} from "https://unpkg.com/lit?module";
-import {DateTime} from "https://unpkg.com/luxon@3.0.3?module";
+import {html, LitElement, nothing} from "lit";
+import {DateTime} from "luxon";
 import style from './style.js';
 
 class GrocyChoresCard extends LitElement {
