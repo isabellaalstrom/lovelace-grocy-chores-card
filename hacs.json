@@ -1,5 +1,5 @@
 {
-  "name": "Lovelace Grocy Chores Card (Packaged)",
+  "name": "Lovelace Grocy Chores Card",
   "render_readme": true,
-  "filename": "grocy-chores-card-pkg.js"
+  "filename": "grocy-chores-card.js"
 }
