@@ -524,7 +524,6 @@ class GrocyChoresCard extends LitElement {
             visible = visible && (item.__type === "task" ? this.show_tasks_without_due : true);
         } else {
             visible = visible || this.show_days == null;
-            visible = visible || (item.__due_in_days < 0);
 
             if(this.show_days != null) {
                 const days_range = typeof this.show_days === "number" ? [this.show_days] : this.show_days.split("..", 2);
