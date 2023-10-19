@@ -3,10 +3,10 @@ name: 'Build'
 on:
   push:
     branches:
-      - rollup
+      - rollup2
   pull_request:
     branches:
-      - rollup
+      - rollup2
 
 jobs:
   build:
