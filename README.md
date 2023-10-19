@@ -208,6 +208,21 @@ In general, this update aims to not change any default setups so that anyone usi
 ## Known Issues
 1. Due/Completed dates with the time values 23:59:59 or 00:00:00 will not show the times. This is because those are the default values populated when no time is set.
 
+## Development Instructions
+To do development work on this card (either for your personal use, or to contribute via pull requests), follow these steps:
+
+1. Create a fork of this repository on GitHub
+2. Download and setup the repository on your local machine, by running:
+```
+git clone https://github.com/YOUR_USERNAME/lovelace-grocy-chores-card
+cd lovelace-grocy-chores-card
+git remote add upstream https://github.com/isabellaalstrom/lovelace-grocy-chores-card
+```
+3. Once the repository is setup, install the npm dependencies with `npm install`
+4. Make local edits as needed to the grocy chores card. 
+5. To test changes, run `npm run build`. This will create a compiled version of the card in `output/grocy-chores-card.js`.
+6. Copy the compiled card in the `output/` folder to your Home Assistant installation and update the dashboard resources to point to it. Make sure the cache is cleared each time you try updating with new changes.
+7. Push the changes back to your GitHub origin, and open a pull request if you want to contribute them to the main repository.
 ---
 
 Like my work and want to say thanks? Do it here:
