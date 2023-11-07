@@ -270,7 +270,7 @@ class GrocyChoresCard extends LitElement {
     _renderItem(item) {
         return html`
             <div class="${this.show_divider ? "grocy-item-container" : "grocy-item-container-no-border"} ${this.local_cached_hidden_items.includes(`${item.__type}${item.id}`) ? "hidden-class" : "show-class"} info flex" id="${item.__type}${item.id}">
-                <div>
+                <div style="flex-grow:1">
                     ${this._renderItemName(item)}
                     ${this._renderItemDescription(item)}
                     ${this._shouldRenderDueInDays(item) ? this._renderDueInDays(item) : nothing}
