@@ -712,7 +712,8 @@ class GrocyChoresCard extends LitElement {
         const currentDate = new Date();
 
         // Calculate the date one week from now
-        const oneWeekLater = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const movebyDays = item.__type == 'chore' ? this.move_chore_by_days : this.move_task_by_days;
+        const oneWeekLater = new Date(currentDate.getTime() + movebyDays * 24 * 60 * 60 * 1000);
 
         // Format the date as yyyy-mm-dd
         const year = oneWeekLater.getFullYear();
@@ -857,6 +858,8 @@ class GrocyChoresCard extends LitElement {
         this.use_long_date = this.config.use_long_date ?? false;
         this.use_24_hours = this.config.use_24_hours ?? true;
         this.haptic = this.config.haptic ?? "selection";
+        this.move_chore_by_days = this.config.move_chore_by_days ?? 1;
+        this.move_task_by_days = this.config.move_task_by_days ?? 1;
         this.task_icon = null
         this.chore_icon = null
         this.move_icon = null
