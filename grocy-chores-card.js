@@ -277,6 +277,7 @@ class GrocyChoresCard extends LitElement {
                     ${this._shouldRenderAssignedToUser(item) ? this._renderAssignedToUser(item) : nothing}
                     ${this._shouldRenderLastTracked(item) ? this._renderLastTracked(item) : nothing}
                 </div>
+                ${this.show_move_button ? this._renderMoveButton(item) : nothing}
                 ${this.show_track_button && item.__type === "chore" ? this._renderTrackChoreButton(item) : nothing}
                 ${this.show_track_button && item.__type === "task" ? this._renderTrackTaskButton(item) : nothing}
             </div>
@@ -408,6 +409,26 @@ class GrocyChoresCard extends LitElement {
             <mwc-button
                     @click=${() => this._trackChore(item.id, item.name)}>
                 ${this._translate("Track")}
+            </mwc-button>
+        `
+    }
+
+    _renderMoveButton(item) {
+        if (this.move_icon != null) {
+            return html`
+                <mwc-icon-button class="track-button"
+                                 .label=${this._translate("Move")}
+                                 @click=${() => this._moveItem(item)}>
+                    <ha-icon class="track-button-icon" style="--mdc-icon-size: ${this.move_icon_size}px;"
+                             .icon=${this.move_icon}></ha-icon>
+                </mwc-icon-button>
+            `
+        }
+
+        return html`
+            <mwc-button
+                    @click=${() => this._moveItem(item)}>
+                ${this._translate("Move")}
             </mwc-button>
         `
     }
@@ -686,8 +707,39 @@ class GrocyChoresCard extends LitElement {
         this._showTrackedToast(taskName);
     }
 
+    _moveItem(item) {
+        // Get the current date
+        const currentDate = new Date();
+
+        // Calculate the date one week from now
+        const oneWeekLater = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        // Format the date as yyyy-mm-dd
+        const year = oneWeekLater.getFullYear();
+        const month = String(oneWeekLater.getMonth() + 1).padStart(2, '0');
+        const day = String(oneWeekLater.getDate()).padStart(2, '0');
+
+        const formattedDate = `${year}-${month}-${day}`;
+
+        // Hide the task on the next render, for better visual feedback
+        this.local_cached_hidden_items.push(`${item.__type}${item.id}`);
+        this.requestUpdate();
+        this._hass.callService("grocy", "update_generic", {
+            entity_type: item.__type + 's',
+            object_id: item.id,
+            data: {
+                due_date: formattedDate
+            }
+        });
+        this._showMovedToast(item.name);
+    }
+
     _showTrackedToast(itemName) {
         this._showToast(itemName, this._translate("Tracked"));
+    }
+
+    _showMovedToast(itemName) {
+        this._showToast(itemName, this._translate("Moved"));
     }
 
     _showAddedToast(itemName) {
@@ -787,6 +839,7 @@ class GrocyChoresCard extends LitElement {
         this.show_track_button = this.config.show_track_button ?? true;
         this.show_last_tracked = this.config.show_last_tracked ?? true;
         this.show_last_tracked_by = this.config.show_last_tracked_by ?? true;
+        this.show_move_button = this.config.show_move_button ?? false;
         this.filter_category = this.config.filter_category ?? null;
         this.show_category = this.config.show_category ?? true;
         this.show_description = this.config.show_description ?? false;
@@ -795,6 +848,7 @@ class GrocyChoresCard extends LitElement {
         this.show_overflow = this.config.show_overflow || false;
         this.chore_icon_size = this.config.chore_icon_size || 32;
         this.task_icon_size = this.config.task_icon_size || 24;
+        this.move_icon_size = this.config.move_icon_size || 24;
         this.expand_icon_size = this.config.expand_icon_size || 30;
         this.show_divider = this.config.show_divider ?? false;
         this.due_in_days_threshold = this.config.due_in_days_threshold || 0;
@@ -805,12 +859,14 @@ class GrocyChoresCard extends LitElement {
         this.haptic = this.config.haptic ?? "selection";
         this.task_icon = null
         this.chore_icon = null
+        this.move_icon = null
         this.custom_sort = this.config.custom_sort;
         this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
+            this.move_icon = this.config.move_icon || 'mdi:arrow-right';
         }
         if(this.show_description) {
             this.description_max_length = this.config.description_max_length ?? null;
