@@ -858,6 +858,7 @@ window.customCards.push({
     name: 'Grocy Chores and Tasks Card',
     preview: false,
     description: 'A card used to display chores and/or tasks from the Grocy custom component.',
+    documentationURL: 'https://github.com/isabellaalstrom/lovelace-grocy-chores-card'
 });
 
 customElements.define('grocy-chores-card', GrocyChoresCard);
