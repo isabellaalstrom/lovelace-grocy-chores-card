@@ -3,6 +3,19 @@ import {DateTime} from "luxon";
 import style from './style.js';
 
 class GrocyChoresCard extends LitElement {
+
+    async loadCustomCreateTaskElements() {
+        if(!customElements.get("ha-date-input") || !customElements.get("ha-textfield")) {
+            const cardHelpers = await window.loadCardHelpers();
+            if(!customElements.get("ha-date-input")) {
+              await cardHelpers.importMoreInfoControl("date");
+            }
+            if(!customElements.get("ha-textfield")) {
+              await cardHelpers.importMoreInfoControl("text");
+            }
+        }
+    }
+
     static get styles() {
         return style;
     }
@@ -178,6 +191,10 @@ class GrocyChoresCard extends LitElement {
         }
         this.config = config;
         this._processItems();
+        if(this.config.show_create_task) {
+            this.loadCustomCreateTaskElements();
+        }
+
     }
 
     render() {
@@ -375,20 +392,18 @@ class GrocyChoresCard extends LitElement {
                 <mwc-button @click=${() => this._addTask()}>
                     <ha-icon class="add-icon" icon="mdi:plus"></ha-icon>
                 </mwc-button>
-                <paper-input
+                <ha-textfield
                         id="add-task"
                         class="add-input"
-                        no-label-float
-                        placeholder=${this._translate("Add task")}>
-                </paper-input>
-                <paper-input
+                        .placeholder=${this._translate("Add task")}>
+                </ha-textfield>
+                <ha-date-input
                         id="add-date"
                         class="add-input"
-                        type="date"
-                        no-label-float
-                        placeholder=${this._translate("Optional due date")}
-                        value="${this._taskDueDateInputFormat()}">
-                </paper-input>
+                        .locale=${this._hass.locale}
+                        .label=${this._translate("Optional due date")}
+                        .value="${this._taskDueDateInputFormat()}">
+                </ha-date-input>
             </div>
         `
     }
