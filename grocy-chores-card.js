@@ -783,6 +783,7 @@ class GrocyChoresCard extends LitElement {
         });
 
         this.shadowRoot.getElementById('add-task').value = "";
+        this.shadowRoot.getElementById('add-date').value = "";
 
         this._showAddedToast(taskName);
     }
