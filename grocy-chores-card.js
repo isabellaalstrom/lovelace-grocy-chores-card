@@ -501,8 +501,7 @@ class GrocyChoresCard extends LitElement {
     }
 
     _taskDueDateInputFormat() {
-        const now = DateTime.now();
-        return now.toFormat("yyyy-LL-dd");
+        return '';
     }
 
     _formatDate(dateTime, isDateOnly = false) {
@@ -783,6 +782,7 @@ class GrocyChoresCard extends LitElement {
         });
 
         this.shadowRoot.getElementById('add-task').value = "";
+        this.shadowRoot.getElementById('add-date').value = "";
 
         this._showAddedToast(taskName);
     }
