@@ -501,8 +501,7 @@ class GrocyChoresCard extends LitElement {
     }
 
     _taskDueDateInputFormat() {
-        const now = DateTime.now();
-        return now.toFormat("yyyy-LL-dd");
+        return '';
     }
 
     _formatDate(dateTime, isDateOnly = false) {
