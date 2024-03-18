@@ -560,7 +560,6 @@ class GrocyChoresCard extends LitElement {
             visible = visible && (item.__type === "task" ? this.show_tasks_without_due : true);
         } else {
             visible = visible || this.show_days == null;
-            visible = visible || (item.__due_in_days < 0);
 
             if(this.show_days != null) {
                 const days_range = typeof this.show_days === "number" ? [this.show_days] : this.show_days.split("..", 2);
@@ -600,8 +599,8 @@ class GrocyChoresCard extends LitElement {
     }
 
     _checkMatchUserFilter(item) {
-        let user = this.filter_user === "current" ? this._getUserId() : this.filter_user;
-        return item.__user_id === user;
+        let userArray = [].concat(this.filter_user).map((user) => user === "current" ? this._getUserId() : user);;
+        return userArray.some((user) => item.__user_id == user);
     }
 
     _checkMatchTaskCategoryFilter(item) {
@@ -917,6 +916,7 @@ window.customCards.push({
     name: 'Grocy Chores and Tasks Card',
     preview: false,
     description: 'A card used to display chores and/or tasks from the Grocy custom component.',
+    documentationURL: 'https://github.com/isabellaalstrom/lovelace-grocy-chores-card'
 });
 
 customElements.define('grocy-chores-card', GrocyChoresCard);
