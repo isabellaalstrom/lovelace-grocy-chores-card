@@ -2,7 +2,7 @@
   "dependencies": {
     "lit": "^3.0.0",
     "luxon": "^3.2.1",
-    "rollup": "^4.0.2"
+    "rollup": "^4.22.4"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3"
