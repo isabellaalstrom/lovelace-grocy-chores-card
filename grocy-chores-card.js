@@ -387,7 +387,7 @@ class GrocyChoresCard extends LitElement {
 
     _renderAddTask() {
         return html`
-            <div style="display: none;" id="add-task-row" class="add-row">
+            <div id="add-task-row" class="add-row">
                 <mwc-button @click=${() => this._addTask()}>
                     <ha-icon class="add-icon" icon="mdi:plus"></ha-icon>
                 </mwc-button>
@@ -400,8 +400,7 @@ class GrocyChoresCard extends LitElement {
                         id="add-date"
                         class="add-input"
                         .locale=${this._hass.locale}
-                        .label=${this._translate("Optional due date")}
-                        .value="${this._taskDueDateInputFormat()}">
+                        .label=${this._translate("Optional due date")}>
                 </ha-date-input>
             </div>
         `
