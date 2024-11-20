@@ -387,7 +387,7 @@ class GrocyChoresCard extends LitElement {
 
     _renderAddTask() {
         return html`
-            <div style="display: none;" id="add-task-row" class="add-row">
+            <div id="add-task-row" class="add-row hidden-class">
                 <mwc-button @click=${() => this._addTask()}>
                     <ha-icon class="add-icon" icon="mdi:plus"></ha-icon>
                 </mwc-button>
@@ -400,8 +400,7 @@ class GrocyChoresCard extends LitElement {
                         id="add-date"
                         class="add-input"
                         .locale=${this._hass.locale}
-                        .label=${this._translate("Optional due date")}
-                        .value="${this._taskDueDateInputFormat()}">
+                        .label=${this._translate("Optional due date")}>
                 </ha-date-input>
             </div>
         `
@@ -745,14 +744,14 @@ class GrocyChoresCard extends LitElement {
     }
 
     _toggleAddTask() {
-        const x = this.shadowRoot.getElementById("add-task-row");
-        const icon = this.shadowRoot.getElementById("add-task-icon");
-        if (x.style.display === "none") {
-            x.style.display = "flex";
-            icon.icon = "mdi:chevron-up";
+        const addTaskRow = this.shadowRoot.getElementById("add-task-row");
+        const addTaskIcon = this.shadowRoot.getElementById("add-task-icon");
+        if (addTaskRow.classList.contains('hidden-class')) {
+            addTaskRow.classList.remove('hidden-class');
+            addTaskIcon.icon = "mdi:chevron-up";
         } else {
-            x.style.display = "none";
-            icon.icon = "mdi:chevron-down";
+            addTaskRow.classList.add('hidden-class');
+            addTaskIcon.icon = "mdi:chevron-down";
         }
     }
 
