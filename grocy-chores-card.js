@@ -110,16 +110,19 @@ class GrocyChoresCard extends LitElement {
             return x !== undefined;
         });
 
-        if(!this.custom_sort) {
-        allItems.sort(function (a, b) {
-            if (a.__due_date == null) {
-                return -1;
-            } else if (b.__due_date == null) {
-                return 1;
-            }
-
-            return a.__due_date - b.__due_date;
-        });
+        if (!this.custom_sort) {
+            allItems.sort(function (a, b) {
+                if (a.__due_date == null && b.__due_date == null) {
+                    return 0; // Both are null, maintain current order
+                }
+                if (a.__due_date == null) {
+                    return 1; // Place `null` at the end
+                }
+                if (b.__due_date == null) {
+                    return -1; // Place `null` at the end
+                }
+                return a.__due_date - b.__due_date; // Sort by due_date
+            });
         } else {
             let sort = [].concat(this.custom_sort);
             sort = sort.filter(x=>x);
@@ -130,18 +133,29 @@ class GrocyChoresCard extends LitElement {
                                direction: typeof d === "string" && d.startsWith("d") ? -1 : 1};
                 }
                 if(typeof sort[i] === "string") {
-                    sort[i] = {field: sort[i], direction: 1}
+                    sort[i] = {field: sort[i], direction: 1};
                 }
             }
             sort = sort.filter(x=>x.field !== "");
             allItems.sort(function (a, b) {
                 for(let i=0; i< sort.length; i++) {
                     let f = sort[i].field;
-                    if(a[f] < b[f]) {
-                        return -1 * sort[i].direction;
+                    let dir = sort[i].direction;
+        
+                    if (a[f] == null && b[f] == null) {
+                        continue; // Both are null, maintain current order
                     }
-                    if(b[f] < a[f]) {
-                        return 1 * sort[i].direction;
+                    if (a[f] == null) {
+                        return 1 * dir; // Place null at the end
+                    }
+                    if (b[f] == null) {
+                        return -1 * dir; // Place null at the end
+                    }
+                    if (a[f] < b[f]) {
+                        return -1 * dir;
+                    }
+                    if (a[f] > b[f]) {
+                        return 1 * dir;
                     }
                 }
                 return 0;
@@ -394,13 +408,18 @@ class GrocyChoresCard extends LitElement {
                 <ha-textfield
                         id="add-task"
                         class="add-input"
-                        .placeholder=${this._translate("Add task")}>
+                        .placeholder=${this._translate("Task Name")}>
                 </ha-textfield>
+            </div>
+            <div id="add-task-row2" class="add-row hidden-class">
+                <ha-select id="add-task-category" style="padding: 5px;" .label=${this._translate("Task Category (Optional)")}>
+                  <option value="" disabled selected></option>
+                </ha-select>
                 <ha-date-input
                         id="add-date"
                         class="add-input"
                         .locale=${this._hass.locale}
-                        .label=${this._translate("Optional due date")}>
+                        .label=${this._translate("Due Date (Optional)")}>
                 </ha-date-input>
             </div>
         `
@@ -497,11 +516,6 @@ class GrocyChoresCard extends LitElement {
             newString = newString.replace("{number}", number.toString());
         }
         return newString;
-    }
-
-    _taskDueDateInputFormat() {
-        const now = DateTime.now();
-        return now.toFormat("yyyy-LL-dd");
     }
 
     _formatDate(dateTime, isDateOnly = false) {
@@ -743,21 +757,115 @@ class GrocyChoresCard extends LitElement {
         }
     }
 
+    _populateTaskCategory(){
+        let hass = this._hass;
+        this.entities = [];
+        this.entities_not_found = [];
+        if(!hass) {
+            return;
+        }
+        if (Array.isArray(this.config.entity)) {
+            for (let i = 0; i < this.config.entity.length; ++i) {
+                this.entities[i] = this.config.entity[i] in hass.states ? hass.states[this.config.entity[i]] : null;
+                if(this.entities[i] == null) {
+                    this.entities_not_found.push(this.config.entity[i]);
+                }
+            }
+        } else {
+            this.entities[0] = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
+            if(this.entities[0] == null) {
+              this.entities_not_found.push(this.config.entity);
+            }
+        }
+        if (!Array.isArray(this.entities)) {
+            this.requestUpdate();
+            return;
+        }
+  
+        for (let i = 0; i < this.entities.length; i++) {
+            let entity = this.entities[i];
+            let items;
+  
+            if(!entity) {
+                continue;
+            }
+  
+            if (entity.state === 'unknown') {
+                console.warn("The Grocy sensor " + entity.entity_id + " is unknown.");
+                continue;
+            }
+  
+            if (entity.attributes.tasks === undefined) {
+              return null;
+            }
+  
+            let items1 = JSON.parse(JSON.stringify(entity.attributes.tasks));
+            if (items1 === undefined) {
+              return null;
+            }
+  
+            const tasks = [];
+            items1.map(item => {
+                item.__type = "task";
+                
+                if (item.assigned_to_user) {
+                    item.__user_id = item.assigned_to_user.id;
+                    item.assigned_to_name = item.assigned_to_user.display_name;
+                }
+                
+                if (item.due_date != null) {
+                    item.__due_date = this._toDateTime(item.due_date);
+                    item.__due_in_days = this._calculateDaysTillNow(item.__due_date);
+                }
+  
+                this._formatItemDescription(item);
+  
+                if (this._isItemVisible(item)) {
+                    tasks.push(item);
+                }
+  
+            });
+            const categories = {};
+            entity.attributes.tasks.forEach(task => {
+              const { id, name } = task.category;
+              categories[id] = name; // Use id as key to ensure uniqueness
+            });
+  
+            // Reference to the dropdown
+            const dropdown = this.shadowRoot.getElementById('add-task-category');
+            dropdown.innerHTML="";
+  
+            // Populate the dropdown
+            Object.entries(categories).forEach(([id, name]) => {
+              const option = this.shadowRoot.createElement('ha-list-item');
+              option.value = id;  // Set the value to category ID
+              option.textContent = name;  // Set the text to category name
+              dropdown.appendChild(option);
+            });
+  
+         }
+      }
+
     _toggleAddTask() {
         const addTaskRow = this.shadowRoot.getElementById("add-task-row");
+        const addTaskRow2 = this.shadowRoot.getElementById("add-task-row2");
         const addTaskIcon = this.shadowRoot.getElementById("add-task-icon");
         if (addTaskRow.classList.contains('hidden-class')) {
             addTaskRow.classList.remove('hidden-class');
+            addTaskRow2.classList.remove('hidden-class');
             addTaskIcon.icon = "mdi:chevron-up";
         } else {
             addTaskRow.classList.add('hidden-class');
+            addTaskRow2.classList.add('hidden-class');
             addTaskIcon.icon = "mdi:chevron-down";
         }
+        this._populateTaskCategory();
     }
 
     _addTask() {
         const taskName = this.shadowRoot.getElementById('add-task').value;
         const taskDueDate = this.shadowRoot.getElementById('add-date').value;
+        const taskCategory = this.shadowRoot.getElementById('add-task-category').value;
         let taskData = {};
         if (!taskName) {
             alert(this._translate("'Name' can't be empty"));
@@ -774,7 +882,7 @@ class GrocyChoresCard extends LitElement {
 
             taskData["due_date"] = taskDueDate;
         }
-
+        taskData["category_id"] = taskCategory;
         taskData["assigned_to_user_id"] = this._getUserId();
 
         this._hass.callService("grocy", "add_generic", {
@@ -782,6 +890,8 @@ class GrocyChoresCard extends LitElement {
         });
 
         this.shadowRoot.getElementById('add-task').value = "";
+        this.shadowRoot.getElementById('add-task-category').value = "";
+        this.shadowRoot.getElementById('add-date').value = "";
 
         this._showAddedToast(taskName);
     }
