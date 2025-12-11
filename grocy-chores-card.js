@@ -192,6 +192,7 @@ class GrocyChoresCard extends LitElement {
             due_in_days_threshold: 7,
             use_24_hours: true,
             hide_text_with_no_data: true,
+            show_unassigned: false,
         }
     }
 
@@ -564,7 +565,19 @@ class GrocyChoresCard extends LitElement {
         }
 
         visible = visible && (this.filter !== undefined ? this._checkMatchNameFilter(item) : true);
-        visible = visible && (this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true);
+        
+        // Handle user filter and show_unassigned logic
+        if (this.filter_user !== undefined) {
+            // If filter_user is set, show items matching the filter OR unassigned items (if show_unassigned is true)
+            const isUnassigned = item.__user_id == null || item.__user_id === undefined;
+            const matchesUserFilter = this._checkMatchUserFilter(item);
+            visible = visible && (matchesUserFilter || (this.show_unassigned && isUnassigned));
+        } else if (this.show_unassigned) {
+            // If filter_user is not set but show_unassigned is true, only show unassigned items
+            const isUnassigned = item.__user_id == null || item.__user_id === undefined;
+            visible = visible && isUnassigned;
+        }
+        // If neither filter_user nor show_unassigned is set, show all items (no additional filtering)
 
         if(item.__type === "task" && this.filter_task_category !== undefined) {
             visible = visible && this._checkMatchTaskCategoryFilter(item);
@@ -931,6 +944,7 @@ class GrocyChoresCard extends LitElement {
         this.custom_sort = this.config.custom_sort;
         this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
+        this.show_unassigned = this.config.show_unassigned ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
