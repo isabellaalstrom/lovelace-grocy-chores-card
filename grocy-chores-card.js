@@ -573,12 +573,15 @@ class GrocyChoresCard extends LitElement {
             const matchesUserFilter = this._checkMatchUserFilter(item);
             const shouldShow = matchesUserFilter || (this.show_unassigned && isUnassigned);
             visible = visible && shouldShow;
-        } else if (this.show_unassigned) {
-            // If filter_user is not set but show_unassigned is true, only show unassigned items
-            const isUnassigned = this._isUnassigned(item);
-            visible = visible && isUnassigned;
+        } else {
+            // If filter_user is not set, show_unassigned controls whether to show unassigned items
+            if (this.show_unassigned === false) {
+                // If show_unassigned is false, hide unassigned items (only show assigned items)
+                const isUnassigned = this._isUnassigned(item);
+                visible = visible && !isUnassigned;
+            }
+            // If show_unassigned is true or undefined, show all items (default behavior - no filtering)
         }
-        // If neither filter_user nor show_unassigned is set, show all items (no additional filtering)
 
         if(item.__type === "task" && this.filter_task_category !== undefined) {
             visible = visible && this._checkMatchTaskCategoryFilter(item);
