@@ -192,6 +192,7 @@ class GrocyChoresCard extends LitElement {
             due_in_days_threshold: 7,
             use_24_hours: true,
             hide_text_with_no_data: true,
+            show_unassigned: false,
         }
     }
 
@@ -564,7 +565,23 @@ class GrocyChoresCard extends LitElement {
         }
 
         visible = visible && (this.filter !== undefined ? this._checkMatchNameFilter(item) : true);
-        visible = visible && (this.filter_user !== undefined ? this._checkMatchUserFilter(item) : true);
+        
+        // Handle user filter and show_unassigned logic
+        if (this.filter_user !== undefined) {
+            // If filter_user is set, show items matching the filter OR unassigned items (if show_unassigned is true)
+            const isUnassigned = this._isUnassigned(item);
+            const matchesUserFilter = this._checkMatchUserFilter(item);
+            const shouldShow = matchesUserFilter || (this.show_unassigned && isUnassigned);
+            visible = visible && shouldShow;
+        } else {
+            // If filter_user is not set, show_unassigned controls whether to show unassigned items
+            if (this.show_unassigned === false) {
+                // If show_unassigned is false, hide unassigned items (only show assigned items)
+                const isUnassigned = this._isUnassigned(item);
+                visible = visible && !isUnassigned;
+            }
+            // If show_unassigned is true or undefined, show all items (default behavior - no filtering)
+        }
 
         if(item.__type === "task" && this.filter_task_category !== undefined) {
             visible = visible && this._checkMatchTaskCategoryFilter(item);
@@ -593,6 +610,12 @@ class GrocyChoresCard extends LitElement {
     _checkMatchUserFilter(item) {
         let userArray = [].concat(this.filter_user).map((user) => user === "current" ? this._getUserId() : user);;
         return userArray.some((user) => item.__user_id == user);
+    }
+
+    _isUnassigned(item) {
+        // Check if assigned_to_name is null/undefined, which determines if "Assigned to:" is shown
+        // This works for both chores and tasks
+        return item.assigned_to_name == null;
     }
 
     _checkMatchTaskCategoryFilter(item) {
@@ -931,6 +954,7 @@ class GrocyChoresCard extends LitElement {
         this.custom_sort = this.config.custom_sort;
         this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
+        this.show_unassigned = this.config.show_unassigned ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
