@@ -569,12 +569,13 @@ class GrocyChoresCard extends LitElement {
         // Handle user filter and show_unassigned logic
         if (this.filter_user !== undefined) {
             // If filter_user is set, show items matching the filter OR unassigned items (if show_unassigned is true)
-            const isUnassigned = item.__user_id == null || item.__user_id === undefined;
+            const isUnassigned = this._isUnassigned(item);
             const matchesUserFilter = this._checkMatchUserFilter(item);
-            visible = visible && (matchesUserFilter || (this.show_unassigned && isUnassigned));
+            const shouldShow = matchesUserFilter || (this.show_unassigned && isUnassigned);
+            visible = visible && shouldShow;
         } else if (this.show_unassigned) {
             // If filter_user is not set but show_unassigned is true, only show unassigned items
-            const isUnassigned = item.__user_id == null || item.__user_id === undefined;
+            const isUnassigned = this._isUnassigned(item);
             visible = visible && isUnassigned;
         }
         // If neither filter_user nor show_unassigned is set, show all items (no additional filtering)
@@ -606,6 +607,12 @@ class GrocyChoresCard extends LitElement {
     _checkMatchUserFilter(item) {
         let userArray = [].concat(this.filter_user).map((user) => user === "current" ? this._getUserId() : user);;
         return userArray.some((user) => item.__user_id == user);
+    }
+
+    _isUnassigned(item) {
+        // Check if assigned_to_name is null/undefined, which determines if "Assigned to:" is shown
+        // This works for both chores and tasks
+        return item.assigned_to_name == null;
     }
 
     _checkMatchTaskCategoryFilter(item) {
