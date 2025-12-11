@@ -431,7 +431,7 @@ class GrocyChoresCard extends LitElement {
             return html`
                 <mwc-icon-button class="track-button"
                                  .label=${this._translate("Track")}
-                                 @click=${() => this._trackChore(item.id, item.name)}>
+                                 @click=${() => this._trackChore(item)}>
                     <ha-icon class="track-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
                              .icon=${this.chore_icon}></ha-icon>
                 </mwc-icon-button>
@@ -440,7 +440,7 @@ class GrocyChoresCard extends LitElement {
 
         return html`
             <mwc-button
-                    @click=${() => this._trackChore(item.id, item.name)}>
+                    @click=${() => this._trackChore(item)}>
                 ${this._translate("Track")}
             </mwc-button>
         `
@@ -716,14 +716,30 @@ class GrocyChoresCard extends LitElement {
         }
     }
 
-    _trackChore(choreId, choreName) {
+    _trackChore(item) {
         // Hide the chore on the next render, for better visual feedback
-        this.local_cached_hidden_items.push(`chore${choreId}`);
+        this.local_cached_hidden_items.push(`chore${item.id}`);
         this.requestUpdate();
+        
+        // Determine user ID: if filter_user is enabled, chore is unassigned, and filter_user is a single value, use it
+        let userId;
+        if (this.filter_user !== undefined && this._isUnassigned(item)) {
+            // Check if filter_user is a single value (not an array)
+            if (!Array.isArray(this.filter_user)) {
+                // Single value - use it (handle "current" special case)
+                userId = this.filter_user === "current" ? this._getUserId() : this.filter_user;
+            } else {
+                // It's an array, use normal logic
+                userId = this._getUserId();
+            }
+        } else {
+            userId = this._getUserId();
+        }
+        
         this._hass.callService("grocy", "execute_chore", {
-            chore_id: choreId, done_by: this._getUserId()
+            chore_id: item.id, done_by: userId
         });
-        this._showTrackedToast(choreName);
+        this._showTrackedToast(item.name);
     }
 
     _trackTask(taskId, taskName) {
