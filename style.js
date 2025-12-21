@@ -121,6 +121,39 @@ const style = css`
     filter: drop-shadow(0 0 8px var(--primary, var(--primary-color, #03a9f4)));
   }
 
+  .skip-button {
+    --mdc-ripple-color: none;
+  }
+
+  .skip-button-icon {
+    color: var(--primary-text-color);
+    transition: color 0.3s ease, filter 0.3s ease;
+  }
+
+  .skip-button-icon:hover {
+    color: var(--primary, var(--primary-color, #03a9f4));
+    filter: drop-shadow(0 0 8px var(--primary, var(--primary-color, #03a9f4)));
+  }
+
+  .grocy-item-container .flex,
+  .grocy-item-container-no-border .flex {
+    align-items: center;
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .reschedule-button,
+  .skip-button,
+  .track-button,
+  .track-checkbox {
+    flex-shrink: 0;
+  }
+
   .card-overflow-content {
 
   }

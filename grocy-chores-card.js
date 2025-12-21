@@ -325,9 +325,12 @@ class GrocyChoresCard extends LitElement {
                     ${this._shouldRenderAssignedToUser(item) ? this._renderAssignedToUser(item) : nothing}
                     ${this._shouldRenderLastTracked(item) ? this._renderLastTracked(item) : nothing}
                 </div>
-                ${this.show_enable_reschedule && (item.__type === "chore" || item.__type === "task") ? this._renderRescheduleButton(item) : nothing}
-                ${this.show_track_button && item.__type === "chore" ? this._renderTrackChoreButton(item) : nothing}
-                ${this.show_track_button && item.__type === "task" ? this._renderTrackTaskButton(item) : nothing}
+                <div class="action-buttons">
+                    ${this.show_enable_reschedule && (item.__type === "chore" || item.__type === "task") ? this._renderRescheduleButton(item) : nothing}
+                    ${this.show_skip_next && (item.__type === "chore" || item.__type === "task") ? this._renderSkipButton(item) : nothing}
+                    ${this.show_track_button && item.__type === "chore" ? this._renderTrackChoreButton(item) : nothing}
+                    ${this.show_track_button && item.__type === "task" ? this._renderTrackTaskButton(item) : nothing}
+                </div>
             </div>
         `
     }
@@ -482,6 +485,29 @@ class GrocyChoresCard extends LitElement {
             <mwc-button
                     @click=${() => this._openRescheduleDialog(item)}>
                 ${this._translate("Reschedule")}
+            </mwc-button>
+        `
+    }
+
+    _renderSkipButton(item) {
+        const shouldUseIcon = this.use_icons !== false;
+        const icon = shouldUseIcon ? 'mdi:skip-next-circle-outline' : null;
+        
+        if (icon != null) {
+            return html`
+                <mwc-icon-button class="skip-button"
+                                 .label=${this._translate("Skip")}
+                                 @click=${() => this._skipItem(item)}>
+                    <ha-icon class="skip-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
+                             .icon=${icon}></ha-icon>
+                </mwc-icon-button>
+            `
+        }
+
+        return html`
+            <mwc-button
+                    @click=${() => this._skipItem(item)}>
+                ${this._translate("Skip")}
             </mwc-button>
         `
     }
@@ -851,7 +877,7 @@ class GrocyChoresCard extends LitElement {
                 }
                 
                 // Get original chore data to preserve assigned user
-                const grocyEntity = this.entities.find(e => e.attributes.chores);
+                const grocyEntity = this.entities.find(e => e.attributes.chores || e.attributes.tasks);
                 let assignedUserId = "";
                 if (grocyEntity) {
                     const originalChore = grocyEntity.attributes.chores.find(c => c.id === this._rescheduleItem.id);
@@ -963,6 +989,88 @@ class GrocyChoresCard extends LitElement {
                 </mwc-button>
             </ha-dialog>
         `;
+    }
+
+    async _skipItem(item) {
+        try {
+            if (item.__type === "chore") {
+                // Use Grocy service to execute chore with skipped flag
+                // The service will handle tracked_time automatically (uses next_estimated_execution_time when skipped)
+                await this._hass.callService("grocy", "execute_chore", {
+                    chore_id: item.id,
+                    done_by: this._getUserId(),
+                    skipped: true
+                });
+            } else {
+                // For tasks: Skip to next day
+                // Calculate next day: next day of task's due date OR next day of today if task is in the past
+                let nextDay;
+                if (item.__due_date) {
+                    const taskDate = item.__due_date;
+                    const today = DateTime.now().startOf('day');
+                    const taskDateOnly = taskDate.startOf('day');
+                    
+                    if (taskDateOnly >= today) {
+                        // Task is today or in the future, skip to next day after task date
+                        nextDay = taskDateOnly.plus({ days: 1 });
+                    } else {
+                        // Task is in the past, skip to next day after today
+                        nextDay = today.plus({ days: 1 });
+                    }
+                } else {
+                    // No due date, skip to next day after today
+                    nextDay = DateTime.now().startOf('day').plus({ days: 1 });
+                }
+
+                const nextDayStr = nextDay.toFormat("yyyy-LL-dd");
+
+                // Get original task data to preserve all fields
+                const grocyEntity = this.entities.find(e => e.attributes.tasks);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
+                const originalTask = grocyEntity.attributes.tasks.find(t => t.id === item.id);
+                if (!originalTask) {
+                    throw new Error("Original task data not found");
+                }
+
+                // Build payload with all original data and updated due_date
+                const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
+                const taskData = {
+                    name: originalTask.name || "",
+                    description: originalTask.description || "",
+                    category_id: categoryId,
+                    assigned_to_user_id: originalTask.assigned_to_user ? String(originalTask.assigned_to_user.id) : "",
+                    due_date: nextDayStr
+                };
+
+                // Use Grocy service to update the task
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "tasks",
+                    object_id: item.id,
+                    data: taskData
+                });
+            }
+
+            // Hide the item on the next render, for better visual feedback
+            this.local_cached_hidden_items.push(`${item.__type}${item.id}`);
+            this.requestUpdate();
+
+            // Refresh the card by requesting an update
+            this.requestUpdate();
+            if (this.config.browser_mod) {
+                const itemType = item.__type === "chore" ? "Chore" : "Task";
+                this._hass.callService("browser_mod", "notification", {
+                    message: this._translate(`${itemType} skipped`),
+                    notification_id: "grocy-skip"
+                });
+            }
+        } catch (error) {
+            console.error("Error skipping item:", error);
+            const itemType = item.__type === "chore" ? "chore" : "task";
+            alert(this._translate(`Failed to skip ${itemType}: `) + (error.message || error));
+        }
     }
 
     _showTrackedToast(itemName) {
@@ -1189,6 +1297,7 @@ class GrocyChoresCard extends LitElement {
         this.use_icons = this.config.use_icons ?? false;
         this.show_unassigned = this.config.show_unassigned ?? false;
         this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
+        this.show_skip_next = this.config.show_skip_next ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
