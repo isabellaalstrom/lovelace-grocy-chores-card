@@ -1060,14 +1060,13 @@ class GrocyChoresCard extends LitElement {
                 <div>
                     <!-- Skip to next day button -->
                     <div style="margin-bottom: 16px;">
-                        <mwc-button 
+                        <ha-button 
                             @click=${() => this._skipToNextDay()}
                             raised
-                            unelevated
                             style="width: 100%;">
                             <ha-icon icon="mdi:skip-next-circle-outline" style="margin-right: 8px;"></ha-icon>
                             ${this._translate("Skip to next day")}
-                        </mwc-button>
+                        </ha-button>
                     </div>
                     
                     <!-- Divider with OR -->
