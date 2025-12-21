@@ -52,6 +52,8 @@ views:
 | show_last_tracked            | bool        | **Optional** | `true`   | Show when someone last tracked this chore (does not work on tasks).                                                                                                                                                                  |
 | show_last_tracked_by         | bool        | **Optional** | `true`   | Show who last tracked this chore (`show_last_tracked` must be true to show this) (does not work on tasks).                                                                                                                           |
 | show_track_button            | bool        | **Optional** | `true`   | Show track (complete) button                                                                                                                                                                                                         |
+| show_enable_reschedule        | bool        | **Optional** | `false`  | Show reschedule button for chores and tasks. When enabled, displays a "Reschedule" button (or `mdi:calendar-clock` icon if `use_icons` is true) to the left of the track button. Clicking it opens a dialog with a "Skip to next day" button at the top (with `mdi:skip-next-circle-outline` icon), followed by a divider with "OR", and then date/time pickers. The "Skip to next day" button immediately reschedules the item to tomorrow using the current time (for chores) or just tomorrow's date (for tasks). Alternatively, you can select a custom date and time using the calendar picker. |
+| show_skip_next          | bool        | **Optional** | `false`  | Show skip button for chores and tasks. When enabled, displays a "Skip" button (or `mdi:skip-next-circle-outline` icon if `use_icons` is true). For tasks, skips to the next day (next day after task's due date, or next day after today if task is in the past). For chores, marks the chore as skipped using the next estimated execution time. |
 | show_empty                   | bool        | **Optional** | `true`   | Set to false to hide card when no items                                                                                                                                                                                              |
 | show_create_task             | bool        | **Optional** | `false`  | Set to true to show ability to add a task in Grocy directly from the card. Due date must be in format yyyy-mm-dd, e.g. 2022-01-31. When due date is empty, task has no due date.                                                     |
 | browser_mod                  | bool        | **Optional** | `false`  | Set to true _if you have installed [browser_mod v2](https://github.com/thomasloven/hass-browser_mod)_ and want feedback when tracking or adding a task, in the form of a native toast bar.                                           |
@@ -85,6 +87,22 @@ custom_translation:
   'Last tracked': "Senast"
   by: "av"
   Track: "Gör nu"
+  Reschedule: "Förflytta"
+  'Reschedule Chore': "Förflytta göromål"
+  'Reschedule Task': "Förflytta uppgift"
+  Date: "Datum"
+  Time: "Tid"
+  Cancel: "Avbryt"
+  'Chore rescheduled': "Göromål förflyttat"
+  'Task rescheduled': "Uppgift förflyttat"
+  'Chore rescheduled to next day': "Göromål förflyttat till nästa dag"
+  'Task rescheduled to next day': "Uppgift förflyttat till nästa dag"
+  'Date is required': "Datum krävs"
+  'Skip to next day': "Hoppa till nästa dag"
+  OR: "ELLER"
+  Skip: "Hoppa över"
+  'Chore skipped': "Göromål hoppat över"
+  'Task skipped': "Uppgift hoppat över"
   'No todos': "Tomt"
   'Look in Grocy for {number} more items': "Det finns {number} fler göromål i Grocy"
   'Add task': "Lägg till"
