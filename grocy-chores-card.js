@@ -691,6 +691,10 @@ class GrocyChoresCard extends LitElement {
             if (item.assigned_to_user) {
                 item.__user_id = item.assigned_to_user.id;
                 item.assigned_to_name = item.assigned_to_user.display_name;
+            } else if (item.assigned_to_user_id) {
+                // Handle case where assigned_to_user_id is provided directly
+                item.__user_id = item.assigned_to_user_id;
+                // Note: assigned_to_name will remain null/undefined in this case
             }
             
             if (item.due_date != null) {
@@ -944,10 +948,17 @@ class GrocyChoresCard extends LitElement {
                         </ha-time-input>
                     ` : nothing}
                 </div>
-                <mwc-button slot="primaryAction" @click=${() => this._doReschedule()}>
+                <mwc-button 
+                    slot="primaryAction" 
+                    @click=${() => this._doReschedule()}
+                    raised
+                    unelevated>
                     ${this._translate("Reschedule")}
                 </mwc-button>
-                <mwc-button slot="secondaryAction" @click=${() => this._closeRescheduleDialog()}>
+                <mwc-button 
+                    slot="secondaryAction" 
+                    @click=${() => this._closeRescheduleDialog()}
+                    outlined>
                     ${this._translate("Cancel")}
                 </mwc-button>
             </ha-dialog>
@@ -1052,6 +1063,10 @@ class GrocyChoresCard extends LitElement {
                 if (item.assigned_to_user) {
                     item.__user_id = item.assigned_to_user.id;
                     item.assigned_to_name = item.assigned_to_user.display_name;
+                } else if (item.assigned_to_user_id) {
+                    // Handle case where assigned_to_user_id is provided directly
+                    item.__user_id = item.assigned_to_user_id;
+                    // Note: assigned_to_name will remain null/undefined in this case
                 }
                 
                 if (item.due_date != null) {
