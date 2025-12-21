@@ -107,6 +107,20 @@ const style = css`
     color: var(--green, var(--active-color, green));
   }
 
+  .reschedule-button {
+    --mdc-ripple-color: none;
+  }
+
+  .reschedule-button-icon {
+    color: var(--primary-text-color);
+    transition: color 0.3s ease, filter 0.3s ease;
+  }
+
+  .reschedule-button-icon:hover {
+    color: var(--primary, var(--primary-color, #03a9f4));
+    filter: drop-shadow(0 0 8px var(--primary, var(--primary-color, #03a9f4)));
+  }
+
   .card-overflow-content {
 
   }

@@ -826,44 +826,53 @@ class GrocyChoresCard extends LitElement {
             return;
         }
 
-        // Get the Grocy entity to find the base URL
-        const grocyEntity = this.entities.find(e => e.attributes.chores || e.attributes.tasks);
-        if (!grocyEntity) {
-            alert(this._translate("Grocy entity not found"));
-            return;
-        }
-
-        // Get the Grocy instance URL from the entity attributes
-        const grocyUrl = grocyEntity.attributes.grocy_url || grocyEntity.attributes.api_url;
-        if (!grocyUrl) {
-            alert(this._translate("Grocy URL not found"));
-            return;
-        }
-
-        const apiKey = grocyEntity.attributes.api_key || '';
-
         try {
-            let response;
-            
             if (this._rescheduleItem.__type === "chore") {
                 // For chores: combine date and time into "YYYY-MM-DD HH:MM:SS"
-                const timeStr = this.shadowRoot.getElementById('reschedule-time').value;
-                const dateTimeStr = timeStr ? `${dateStr} ${timeStr}:00` : `${dateStr} 00:00:00`;
+                const timeInput = this.shadowRoot.getElementById('reschedule-time');
+                const timeStr = timeInput ? timeInput.value : null;
+                // ha-time-input returns "HH:MM" format, we need to add seconds
+                let dateTimeStr;
+                if (timeStr && timeStr.trim()) {
+                    // Remove any existing seconds if present and add :00
+                    const timeParts = timeStr.split(':');
+                    if (timeParts.length >= 2) {
+                        // Take only HH:MM and add :00 for seconds
+                        dateTimeStr = `${dateStr} ${timeParts[0]}:${timeParts[1]}:00`;
+                    } else {
+                        dateTimeStr = `${dateStr} 00:00:00`;
+                    }
+                } else {
+                    dateTimeStr = `${dateStr} 00:00:00`;
+                }
                 
-                response = await fetch(`${grocyUrl}/api/objects/chores/${this._rescheduleItem.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'GROCY-API-KEY': apiKey
-                    },
-                    body: JSON.stringify({
+                // Get original chore data to preserve assigned user
+                const grocyEntity = this.entities.find(e => e.attributes.chores);
+                let assignedUserId = "";
+                if (grocyEntity) {
+                    const originalChore = grocyEntity.attributes.chores.find(c => c.id === this._rescheduleItem.id);
+                    if (originalChore && originalChore.next_execution_assigned_user) {
+                        assignedUserId = String(originalChore.next_execution_assigned_user.id);
+                    }
+                }
+                
+                // Use Grocy service to update the chore
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "chores",
+                    object_id: this._rescheduleItem.id,
+                    data: {
                         rescheduled_date: dateTimeStr,
-                        rescheduled_next_execution_assigned_to_user_id: ""
-                    })
+                        rescheduled_next_execution_assigned_to_user_id: assignedUserId
+                    }
                 });
             } else {
                 // For tasks: need to include all original data plus updated due_date
                 // Get original task data from entity
+                const grocyEntity = this.entities.find(e => e.attributes.tasks);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
                 const originalTask = grocyEntity.attributes.tasks.find(t => t.id === this._rescheduleItem.id);
                 if (!originalTask) {
                     throw new Error("Original task data not found");
@@ -872,7 +881,7 @@ class GrocyChoresCard extends LitElement {
                 // Build payload with all original data and updated due_date
                 // category_id might be in category.id or directly as category_id
                 const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
-                const payload = {
+                const taskData = {
                     name: originalTask.name || "",
                     description: originalTask.description || "",
                     category_id: categoryId,
@@ -880,19 +889,12 @@ class GrocyChoresCard extends LitElement {
                     due_date: dateStr || ""
                 };
 
-                response = await fetch(`${grocyUrl}/api/objects/tasks/${this._rescheduleItem.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'GROCY-API-KEY': apiKey
-                    },
-                    body: JSON.stringify(payload)
+                // Use Grocy service to update the task
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "tasks",
+                    object_id: this._rescheduleItem.id,
+                    data: taskData
                 });
-            }
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
 
             this._closeRescheduleDialog();
@@ -908,7 +910,7 @@ class GrocyChoresCard extends LitElement {
         } catch (error) {
             console.error("Error rescheduling item:", error);
             const itemType = this._rescheduleItem.__type === "chore" ? "chore" : "task";
-            alert(this._translate(`Failed to reschedule ${itemType}: `) + error.message);
+            alert(this._translate(`Failed to reschedule ${itemType}: `) + (error.message || error));
         }
     }
 
