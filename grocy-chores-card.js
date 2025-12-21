@@ -16,6 +16,18 @@ class GrocyChoresCard extends LitElement {
         }
     }
 
+    async loadRescheduleElements() {
+        if(!customElements.get("ha-dialog") || !customElements.get("ha-time-input")) {
+            const cardHelpers = await window.loadCardHelpers();
+            if(!customElements.get("ha-dialog")) {
+                await cardHelpers.importMoreInfoDialog();
+            }
+            if(!customElements.get("ha-time-input")) {
+                await cardHelpers.importMoreInfoControl("time");
+            }
+        }
+    }
+
     static get styles() {
         return style;
     }
@@ -209,6 +221,9 @@ class GrocyChoresCard extends LitElement {
         if(this.config.show_create_task) {
             this.loadCustomCreateTaskElements();
         }
+        if(this.config.show_enable_reschedule) {
+            this.loadRescheduleElements();
+        }
 
     }
 
@@ -246,6 +261,7 @@ class GrocyChoresCard extends LitElement {
                     ${this.itemsNotVisible > 0 ? this._renderNrItemsInGrocy() : nothing}
                     ${this.overflow && this.overflow.length > 0 ? this._renderOverflow() : nothing}
                 </ha-card>`}
+            ${this.show_enable_reschedule ? this._renderRescheduleDialog() : nothing}
         `;
     }
 
@@ -309,6 +325,7 @@ class GrocyChoresCard extends LitElement {
                     ${this._shouldRenderAssignedToUser(item) ? this._renderAssignedToUser(item) : nothing}
                     ${this._shouldRenderLastTracked(item) ? this._renderLastTracked(item) : nothing}
                 </div>
+                ${this.show_enable_reschedule && (item.__type === "chore" || item.__type === "task") ? this._renderRescheduleButton(item) : nothing}
                 ${this.show_track_button && item.__type === "chore" ? this._renderTrackChoreButton(item) : nothing}
                 ${this.show_track_button && item.__type === "task" ? this._renderTrackTaskButton(item) : nothing}
             </div>
@@ -442,6 +459,29 @@ class GrocyChoresCard extends LitElement {
             <mwc-button
                     @click=${() => this._trackChore(item)}>
                 ${this._translate("Track")}
+            </mwc-button>
+        `
+    }
+
+    _renderRescheduleButton(item) {
+        const shouldUseIcon = this.use_icons !== false;
+        const icon = shouldUseIcon ? 'mdi:calendar-clock' : null;
+        
+        if (icon != null) {
+            return html`
+                <mwc-icon-button class="reschedule-button"
+                                 .label=${this._translate("Reschedule")}
+                                 @click=${() => this._openRescheduleDialog(item)}>
+                    <ha-icon class="reschedule-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
+                             .icon=${icon}></ha-icon>
+                </mwc-icon-button>
+            `
+        }
+
+        return html`
+            <mwc-button
+                    @click=${() => this._openRescheduleDialog(item)}>
+                ${this._translate("Reschedule")}
             </mwc-button>
         `
     }
@@ -752,6 +792,166 @@ class GrocyChoresCard extends LitElement {
         this._showTrackedToast(taskName);
     }
 
+    async _openRescheduleDialog(item) {
+        await this.loadRescheduleElements();
+        this._rescheduleItem = item;
+        // Default to current execution/due date, or current time if not set
+        const defaultDate = item.__due_date || DateTime.now();
+        this._rescheduleDate = defaultDate.toFormat("yyyy-LL-dd");
+        // Only set time for chores (tasks don't have time)
+        if (item.__type === "chore") {
+            this._rescheduleTime = defaultDate.toFormat("HH:mm");
+        } else {
+            this._rescheduleTime = null;
+        }
+        this._rescheduleDialogOpen = true;
+        this.requestUpdate();
+    }
+
+    _closeRescheduleDialog() {
+        this._rescheduleDialogOpen = false;
+        this._rescheduleItem = null;
+        this.requestUpdate();
+    }
+
+    async _doReschedule() {
+        if (!this._rescheduleItem) {
+            return;
+        }
+
+        const dateStr = this.shadowRoot.getElementById('reschedule-date').value;
+
+        if (!dateStr) {
+            alert(this._translate("Date is required"));
+            return;
+        }
+
+        // Get the Grocy entity to find the base URL
+        const grocyEntity = this.entities.find(e => e.attributes.chores || e.attributes.tasks);
+        if (!grocyEntity) {
+            alert(this._translate("Grocy entity not found"));
+            return;
+        }
+
+        // Get the Grocy instance URL from the entity attributes
+        const grocyUrl = grocyEntity.attributes.grocy_url || grocyEntity.attributes.api_url;
+        if (!grocyUrl) {
+            alert(this._translate("Grocy URL not found"));
+            return;
+        }
+
+        const apiKey = grocyEntity.attributes.api_key || '';
+
+        try {
+            let response;
+            
+            if (this._rescheduleItem.__type === "chore") {
+                // For chores: combine date and time into "YYYY-MM-DD HH:MM:SS"
+                const timeStr = this.shadowRoot.getElementById('reschedule-time').value;
+                const dateTimeStr = timeStr ? `${dateStr} ${timeStr}:00` : `${dateStr} 00:00:00`;
+                
+                response = await fetch(`${grocyUrl}/api/objects/chores/${this._rescheduleItem.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'GROCY-API-KEY': apiKey
+                    },
+                    body: JSON.stringify({
+                        rescheduled_date: dateTimeStr,
+                        rescheduled_next_execution_assigned_to_user_id: ""
+                    })
+                });
+            } else {
+                // For tasks: need to include all original data plus updated due_date
+                // Get original task data from entity
+                const originalTask = grocyEntity.attributes.tasks.find(t => t.id === this._rescheduleItem.id);
+                if (!originalTask) {
+                    throw new Error("Original task data not found");
+                }
+
+                // Build payload with all original data and updated due_date
+                // category_id might be in category.id or directly as category_id
+                const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
+                const payload = {
+                    name: originalTask.name || "",
+                    description: originalTask.description || "",
+                    category_id: categoryId,
+                    assigned_to_user_id: originalTask.assigned_to_user ? String(originalTask.assigned_to_user.id) : "",
+                    due_date: dateStr || ""
+                };
+
+                response = await fetch(`${grocyUrl}/api/objects/tasks/${this._rescheduleItem.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'GROCY-API-KEY': apiKey
+                    },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            this._closeRescheduleDialog();
+            // Refresh the card by requesting an update
+            this.requestUpdate();
+            if (this.config.browser_mod) {
+                const itemType = this._rescheduleItem.__type === "chore" ? "Chore" : "Task";
+                this._hass.callService("browser_mod", "notification", {
+                    message: this._translate(`${itemType} rescheduled`),
+                    notification_id: "grocy-reschedule"
+                });
+            }
+        } catch (error) {
+            console.error("Error rescheduling item:", error);
+            const itemType = this._rescheduleItem.__type === "chore" ? "chore" : "task";
+            alert(this._translate(`Failed to reschedule ${itemType}: `) + error.message);
+        }
+    }
+
+    _renderRescheduleDialog() {
+        if (!this._rescheduleDialogOpen || !this._rescheduleItem) {
+            return nothing;
+        }
+
+        const isChore = this._rescheduleItem.__type === "chore";
+        const heading = isChore ? this._translate("Reschedule Chore") : this._translate("Reschedule Task");
+
+        return html`
+            <ha-dialog
+                open
+                .heading=${heading}
+                @closed=${() => this._closeRescheduleDialog()}>
+                <div>
+                    <ha-date-input
+                        id="reschedule-date"
+                        .locale=${this._hass.locale}
+                        .label=${this._translate("Date")}
+                        .value=${this._rescheduleDate}>
+                    </ha-date-input>
+                    ${isChore ? html`
+                        <ha-time-input
+                            id="reschedule-time"
+                            .locale=${this._hass.locale}
+                            .label=${this._translate("Time")}
+                            .value=${this._rescheduleTime}
+                            .format=${this.use_24_hours ? 24 : 12}>
+                        </ha-time-input>
+                    ` : nothing}
+                </div>
+                <mwc-button slot="primaryAction" @click=${() => this._doReschedule()}>
+                    ${this._translate("Reschedule")}
+                </mwc-button>
+                <mwc-button slot="secondaryAction" @click=${() => this._closeRescheduleDialog()}>
+                    ${this._translate("Cancel")}
+                </mwc-button>
+            </ha-dialog>
+        `;
+    }
+
     _showTrackedToast(itemName) {
         this._showToast(itemName, this._translate("Tracked"));
     }
@@ -971,6 +1171,7 @@ class GrocyChoresCard extends LitElement {
         this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
         this.show_unassigned = this.config.show_unassigned ?? false;
+        this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
@@ -983,7 +1184,11 @@ class GrocyChoresCard extends LitElement {
 
     constructor() {
         super();
-        this.local_cached_hidden_items = []
+        this.local_cached_hidden_items = [];
+        this._rescheduleDialogOpen = false;
+        this._rescheduleItem = null;
+        this._rescheduleDate = null;
+        this._rescheduleTime = null;
     }
 
     getCardSize() {
