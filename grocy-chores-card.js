@@ -271,13 +271,9 @@ class GrocyChoresCard extends LitElement {
                 <div>
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
-                        <div slot="icon" style="width: 100%;">
-                            <span class="mdc-button__label">${this._translate("{number} More Items", this.overflow.length)}</span>
-                        </div>
-                        <div slot="trailingIcon">
-                            <ha-icon slot="trailingIcon" style="--mdc-icon-size: ${this.expand_icon_size}px;"
-                                     .icon=${"mdi:chevron-down"}></ha-icon>
-                        </div>
+                        ${this._translate("{number} More Items", this.overflow.length)}
+                        <ha-icon slot="trailingIcon" style="--mdc-icon-size: ${this.expand_icon_size}px;"
+                                 .icon=${"mdi:chevron-down"}></ha-icon>
                     </ha-button>
                 </div>
             </div>
@@ -290,13 +286,9 @@ class GrocyChoresCard extends LitElement {
                 <div>
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
-                        <div slot="icon" style="width: 100%;">
-                            <span class="mdc-button__label">${this._translate("Show Less")}</span>
-                        </div>
-                        <div slot="trailingIcon">
-                            <ha-icon slot="trailingIcon"
-                                     .icon=${"mdi:chevron-up"}></ha-icon>
-                        </div>
+                        ${this._translate("Show Less")}
+                        <ha-icon slot="trailingIcon"
+                                 .icon=${"mdi:chevron-up"}></ha-icon>
                     </ha-button>
                 </div>
             </div>
