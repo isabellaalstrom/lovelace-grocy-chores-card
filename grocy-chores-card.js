@@ -262,6 +262,7 @@ class GrocyChoresCard extends LitElement {
                     ${this.overflow && this.overflow.length > 0 ? this._renderOverflow() : nothing}
                 </ha-card>`}
             ${this.show_enable_reschedule ? this._renderRescheduleDialog() : nothing}
+            ${this.show_description_popup ? this._renderDescriptionDialog() : nothing}
         `;
     }
 
@@ -386,6 +387,13 @@ class GrocyChoresCard extends LitElement {
     }
 
     _renderItemName(item) {
+        if (this.show_description_popup && (item.__type === "chore" || item.__type === "task")) {
+            return html`
+                <div class="primary" style="cursor: pointer;" @click=${() => this._openDescriptionDialog(item)}>
+                    ${item.__filtered_name ?? item.name}
+                </div>
+            `
+        }
         return html`
             <div class="primary">
                 ${item.__filtered_name ?? item.name}
@@ -836,6 +844,19 @@ class GrocyChoresCard extends LitElement {
         this.requestUpdate();
     }
 
+    async _openDescriptionDialog(item) {
+        await this.loadRescheduleElements(); // Reuse the same elements loader for ha-dialog
+        this._descriptionItem = item;
+        this._descriptionDialogOpen = true;
+        this.requestUpdate();
+    }
+
+    _closeDescriptionDialog() {
+        this._descriptionDialogOpen = false;
+        this._descriptionItem = null;
+        this.requestUpdate();
+    }
+
     async _skipToNextDay() {
         if (!this._rescheduleItem) {
             return;
@@ -1034,6 +1055,33 @@ class GrocyChoresCard extends LitElement {
             const itemType = this._rescheduleItem.__type === "chore" ? "chore" : "task";
             alert(this._translate(`Failed to reschedule ${itemType}: `) + (error.message || error));
         }
+    }
+
+    _renderDescriptionDialog() {
+        if (!this._descriptionDialogOpen || !this._descriptionItem) {
+            return nothing;
+        }
+
+        const description = this._descriptionItem.description;
+        const hasDescription = description != null && description.trim() !== "";
+        const displayText = hasDescription ? description : this._translate("No description found.");
+
+        return html`
+            <ha-dialog
+                open
+                .heading=${this._descriptionItem.__filtered_name ?? this._descriptionItem.name}
+                @closed=${() => this._closeDescriptionDialog()}>
+                <div style="white-space: pre-line; padding: 16px 0;">
+                    ${displayText}
+                </div>
+                <ha-button 
+                    slot="primaryAction" 
+                    @click=${() => this._closeDescriptionDialog()}
+                    raised>
+                    ${this._translate("OK")}
+                </ha-button>
+            </ha-dialog>
+        `;
     }
 
     _renderRescheduleDialog() {
@@ -1408,6 +1456,7 @@ class GrocyChoresCard extends LitElement {
         this.show_unassigned = this.config.show_unassigned ?? false;
         this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
         this.show_skip_next = this.config.show_skip_next ?? false;
+        this.show_description_popup = this.config.show_description_popup ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
@@ -1425,6 +1474,8 @@ class GrocyChoresCard extends LitElement {
         this._rescheduleItem = null;
         this._rescheduleDate = null;
         this._rescheduleTime = null;
+        this._descriptionDialogOpen = false;
+        this._descriptionItem = null;
     }
 
     getCardSize() {
