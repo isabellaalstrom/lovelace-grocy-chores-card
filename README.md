@@ -54,7 +54,8 @@ views:
 | show_track_button            | bool        | **Optional** | `true`   | Show track (complete) button                                                                                                                                                                                                         |
 | show_enable_reschedule        | bool        | **Optional** | `false`  | Show reschedule button for chores and tasks. When enabled, displays a "Reschedule" button (or `mdi:calendar-clock` icon if `use_icons` is true) to the left of the track button. Clicking it opens a dialog with a "Skip to next day" button at the top (with `mdi:skip-next-circle-outline` icon), followed by a divider with "OR", and then date/time pickers. The "Skip to next day" button immediately reschedules the item to tomorrow using the current time (for chores) or just tomorrow's date (for tasks). Alternatively, you can select a custom date and time using the calendar picker. |
 | show_skip_next          | bool        | **Optional** | `false`  | Show skip button for chores and tasks. When enabled, displays a "Skip" button (or `mdi:skip-next-circle-outline` icon if `use_icons` is true). For tasks, skips to the next day (next day after task's due date, or next day after today if task is in the past). For chores, marks the chore as skipped using the next estimated execution time. |
-| show_description_popup        | bool        | **Optional** | `false`  | When enabled, clicking on a chore or task name opens a popup dialog displaying the item's description. If the item has no description, it displays "No description found.". The description preserves newlines and formatting. The dialog can be closed by clicking the "OK" button or clicking outside the dialog. |
+| show_more_info_popup        | bool        | **Optional** | `false`  | When enabled, clicking on a chore or task name opens a popup dialog displaying the item's description. If the item has no description, it displays "No description found.". The description preserves newlines and formatting. The dialog can be closed by clicking the "OK" button or clicking outside the dialog. When enabled and `filter_user` is set to a single user ID (not a list), and the item is unassigned, an "Assign to me" button will appear in the dialog (unless `disable_show_assign_to_me` is set to `true`). |
+| disable_show_assign_to_me     | bool        | **Optional** | `false`  | When `true`, disables the "Assign to me" button in the more info dialog. The "Assign to me" button only appears when `show_more_info_popup` is enabled, `filter_user` is a single value (not a list), and the item is unassigned. |
 | show_empty                   | bool        | **Optional** | `true`   | Set to false to hide card when no items                                                                                                                                                                                              |
 | show_create_task             | bool        | **Optional** | `false`  | Set to true to show ability to add a task in Grocy directly from the card. Due date must be in format yyyy-mm-dd, e.g. 2022-01-31. When due date is empty, task has no due date.                                                     |
 | browser_mod                  | bool        | **Optional** | `false`  | Set to true _if you have installed [browser_mod v2](https://github.com/thomasloven/hass-browser_mod)_ and want feedback when tracking or adding a task, in the form of a native toast bar.                                           |
@@ -106,6 +107,9 @@ custom_translation:
   'Task skipped': "Uppgift hoppat över"
   'No description found.': "Ingen beskrivning hittades."
   OK: "OK"
+  'Assign to me': "Tilldela mig"
+  'Chore assigned': "Göromål tilldelat"
+  'Task assigned': "Uppgift tilldelat"
   'No todos': "Tomt"
   'Look in Grocy for {number} more items': "Det finns {number} fler göromål i Grocy"
   'Add task': "Lägg till"

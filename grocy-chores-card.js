@@ -224,6 +224,9 @@ class GrocyChoresCard extends LitElement {
         if(this.config.show_enable_reschedule) {
             this.loadRescheduleElements();
         }
+        if(this.config.show_more_info_popup) {
+            this.loadRescheduleElements();
+        }
 
     }
 
@@ -262,7 +265,7 @@ class GrocyChoresCard extends LitElement {
                     ${this.overflow && this.overflow.length > 0 ? this._renderOverflow() : nothing}
                 </ha-card>`}
             ${this.show_enable_reschedule ? this._renderRescheduleDialog() : nothing}
-            ${this.show_description_popup ? this._renderDescriptionDialog() : nothing}
+            ${this.show_more_info_popup ? this._renderDescriptionDialog() : nothing}
         `;
     }
 
@@ -387,7 +390,7 @@ class GrocyChoresCard extends LitElement {
     }
 
     _renderItemName(item) {
-        if (this.show_description_popup && (item.__type === "chore" || item.__type === "task")) {
+        if (this.show_more_info_popup && (item.__type === "chore" || item.__type === "task")) {
             return html`
                 <div class="primary" style="cursor: pointer;" @click=${() => this._openDescriptionDialog(item)}>
                     ${item.__filtered_name ?? item.name}
@@ -857,6 +860,116 @@ class GrocyChoresCard extends LitElement {
         this.requestUpdate();
     }
 
+    async _assignToMe() {
+        // Prevent multiple simultaneous calls
+        if (this._assigning) {
+            return;
+        }
+        this._assigning = true;
+
+        // Store item in local variable immediately to prevent it from being cleared
+        const item = this._descriptionItem;
+        if (!item) {
+            this._assigning = false;
+            return;
+        }
+
+        // Get the filtered user ID
+        let userId;
+        if (this.filter_user === "current") {
+            userId = this._getUserId();
+        } else {
+            userId = this.filter_user;
+        }
+
+        try {
+            if (item.__type === "chore") {
+                // For chores: need to get original chore data and update assignment
+                const grocyEntity = this.entities.find(e => e.attributes.chores);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
+                const originalChore = grocyEntity.attributes.chores?.find(c => c.id === item.id);
+                if (!originalChore) {
+                    throw new Error("Original chore data not found");
+                }
+
+                // For chores, we only need to update the assignment
+                // Use existing rescheduled_date if available, otherwise use next_estimated_execution_time
+                let rescheduledDate = originalChore.rescheduled_date;
+                
+                if (!rescheduledDate && originalChore.next_estimated_execution_time) {
+                    // If no rescheduled_date, use next_estimated_execution_time
+                    rescheduledDate = originalChore.next_estimated_execution_time;
+                } 
+
+                const chorePayload = {
+                    rescheduled_date: rescheduledDate,
+                    rescheduled_next_execution_assigned_to_user_id: String(userId),
+                    next_execution_assigned_to_user_id: String(userId)
+                };
+                
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "chores",
+                    object_id: item.id,
+                    data: chorePayload
+                });
+            } else {
+                // For tasks: need to include all original data plus updated assigned_to_user_id
+                const grocyEntity = this.entities.find(e => e.attributes.tasks);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
+                const originalTask = grocyEntity.attributes.tasks?.find(t => t.id === item.id);
+                if (!originalTask) {
+                    throw new Error("Original task data not found");
+                }
+
+                // Build payload with all original data and updated assigned_to_user_id
+                const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
+                const taskData = {
+                    name: originalTask.name || "",
+                    description: originalTask.description || "",
+                    category_id: categoryId,
+                    assigned_to_user_id: String(userId),
+                    due_date: originalTask.due_date || ""
+                };
+
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "tasks",
+                    object_id: item.id,
+                    data: taskData
+                });
+            }
+
+            // Close dialog first
+            this._closeDescriptionDialog();
+            
+            // Show success message
+            const itemType = item.__type === "chore" ? "Chore" : "Task";
+            if (this.config.browser_mod) {
+                this._hass.callService("browser_mod", "notification", {
+                    message: this._translate(`${itemType} assigned`),
+                    notification_id: "grocy-assign"
+                }).catch(() => {
+                    // Ignore errors
+                });
+            }
+            
+            // Simple refresh - let Home Assistant handle entity updates naturally
+            this.requestUpdate();
+            
+            this._assigning = false;
+        } catch (error) {
+            this._assigning = false;
+            const itemType = item ? (item.__type === "chore" ? "chore" : "task") : "item";
+            const errorMessage = error.message || error.toString() || "Unknown error";
+            alert(this._translate(`Failed to assign ${itemType}: `) + errorMessage);
+        }
+    }
+
     async _skipToNextDay() {
         if (!this._rescheduleItem) {
             return;
@@ -1057,6 +1170,30 @@ class GrocyChoresCard extends LitElement {
         }
     }
 
+    _shouldShowAssignToMe() {
+        // Only show if:
+        // 1. show_more_info_popup is enabled
+        // 2. disable_show_assign_to_me is not true
+        // 3. filter_user is a single value (not array)
+        // 4. Item is unassigned
+        if (!this.show_more_info_popup) {
+            return false;
+        }
+        if (this.disable_show_assign_to_me) {
+            return false;
+        }
+        if (!this._descriptionItem) {
+            return false;
+        }
+        if (!this._isUnassigned(this._descriptionItem)) {
+            return false;
+        }
+        if (this.filter_user === undefined || Array.isArray(this.filter_user)) {
+            return false;
+        }
+        return true;
+    }
+
     _renderDescriptionDialog() {
         if (!this._descriptionDialogOpen || !this._descriptionItem) {
             return nothing;
@@ -1065,6 +1202,7 @@ class GrocyChoresCard extends LitElement {
         const description = this._descriptionItem.description;
         const hasDescription = description != null && description.trim() !== "";
         const displayText = hasDescription ? description : this._translate("No description found.");
+        const showAssignButton = this._shouldShowAssignToMe();
 
         return html`
             <ha-dialog
@@ -1074,6 +1212,14 @@ class GrocyChoresCard extends LitElement {
                 <div style="white-space: pre-line; padding: 16px 0;">
                     ${displayText}
                 </div>
+                ${showAssignButton ? html`
+                    <ha-button 
+                        slot="secondaryAction" 
+                        @click=${() => this._assignToMe()}
+                        outlined>
+                        ${this._translate("Assign to me")}
+                    </ha-button>
+                ` : nothing}
                 <ha-button 
                     slot="primaryAction" 
                     @click=${() => this._closeDescriptionDialog()}
@@ -1456,7 +1602,8 @@ class GrocyChoresCard extends LitElement {
         this.show_unassigned = this.config.show_unassigned ?? false;
         this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
         this.show_skip_next = this.config.show_skip_next ?? false;
-        this.show_description_popup = this.config.show_description_popup ?? false;
+        this.show_more_info_popup = this.config.show_more_info_popup ?? false;
+        this.disable_show_assign_to_me = this.config.disable_show_assign_to_me ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
