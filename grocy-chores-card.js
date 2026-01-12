@@ -16,6 +16,18 @@ class GrocyChoresCard extends LitElement {
         }
     }
 
+    async loadRescheduleElements() {
+        if(!customElements.get("ha-dialog") || !customElements.get("ha-time-input")) {
+            const cardHelpers = await window.loadCardHelpers();
+            if(!customElements.get("ha-dialog")) {
+                await cardHelpers.importMoreInfoDialog();
+            }
+            if(!customElements.get("ha-time-input")) {
+                await cardHelpers.importMoreInfoControl("time");
+            }
+        }
+    }
+
     static get styles() {
         return style;
     }
@@ -209,6 +221,9 @@ class GrocyChoresCard extends LitElement {
         if(this.config.show_create_task) {
             this.loadCustomCreateTaskElements();
         }
+        if(this.config.show_enable_reschedule) {
+            this.loadRescheduleElements();
+        }
 
     }
 
@@ -246,6 +261,7 @@ class GrocyChoresCard extends LitElement {
                     ${this.itemsNotVisible > 0 ? this._renderNrItemsInGrocy() : nothing}
                     ${this.overflow && this.overflow.length > 0 ? this._renderOverflow() : nothing}
                 </ha-card>`}
+            ${this.show_enable_reschedule ? this._renderRescheduleDialog() : nothing}
         `;
     }
 
@@ -309,8 +325,12 @@ class GrocyChoresCard extends LitElement {
                     ${this._shouldRenderAssignedToUser(item) ? this._renderAssignedToUser(item) : nothing}
                     ${this._shouldRenderLastTracked(item) ? this._renderLastTracked(item) : nothing}
                 </div>
-                ${this.show_track_button && item.__type === "chore" ? this._renderTrackChoreButton(item) : nothing}
-                ${this.show_track_button && item.__type === "task" ? this._renderTrackTaskButton(item) : nothing}
+                <div class="action-buttons">
+                    ${this.show_enable_reschedule && (item.__type === "chore" || item.__type === "task") ? this._renderRescheduleButton(item) : nothing}
+                    ${this.show_skip_next && (item.__type === "chore" || item.__type === "task") ? this._renderSkipButton(item) : nothing}
+                    ${this.show_track_button && item.__type === "chore" ? this._renderTrackChoreButton(item) : nothing}
+                    ${this.show_track_button && item.__type === "task" ? this._renderTrackTaskButton(item) : nothing}
+                </div>
             </div>
         `
     }
@@ -442,6 +462,52 @@ class GrocyChoresCard extends LitElement {
             <mwc-button
                     @click=${() => this._trackChore(item)}>
                 ${this._translate("Track")}
+            </mwc-button>
+        `
+    }
+
+    _renderRescheduleButton(item) {
+        const shouldUseIcon = this.use_icons !== false;
+        const icon = shouldUseIcon ? 'mdi:calendar-clock' : null;
+        
+        if (icon != null) {
+            return html`
+                <mwc-icon-button class="reschedule-button"
+                                 .label=${this._translate("Reschedule")}
+                                 @click=${() => this._openRescheduleDialog(item)}>
+                    <ha-icon class="reschedule-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
+                             .icon=${icon}></ha-icon>
+                </mwc-icon-button>
+            `
+        }
+
+        return html`
+            <mwc-button
+                    @click=${() => this._openRescheduleDialog(item)}>
+                ${this._translate("Reschedule")}
+            </mwc-button>
+        `
+    }
+
+    _renderSkipButton(item) {
+        const shouldUseIcon = this.use_icons !== false;
+        const icon = shouldUseIcon ? 'mdi:skip-next-circle-outline' : null;
+        
+        if (icon != null) {
+            return html`
+                <mwc-icon-button class="skip-button"
+                                 .label=${this._translate("Skip")}
+                                 @click=${() => this._skipItem(item)}>
+                    <ha-icon class="skip-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
+                             .icon=${icon}></ha-icon>
+                </mwc-icon-button>
+            `
+        }
+
+        return html`
+            <mwc-button
+                    @click=${() => this._skipItem(item)}>
+                ${this._translate("Skip")}
             </mwc-button>
         `
     }
@@ -651,6 +717,10 @@ class GrocyChoresCard extends LitElement {
             if (item.assigned_to_user) {
                 item.__user_id = item.assigned_to_user.id;
                 item.assigned_to_name = item.assigned_to_user.display_name;
+            } else if (item.assigned_to_user_id) {
+                // Handle case where assigned_to_user_id is provided directly
+                item.__user_id = item.assigned_to_user_id;
+                // Note: assigned_to_name will remain null/undefined in this case
             }
             
             if (item.due_date != null) {
@@ -752,6 +822,375 @@ class GrocyChoresCard extends LitElement {
         this._showTrackedToast(taskName);
     }
 
+    async _openRescheduleDialog(item) {
+        await this.loadRescheduleElements();
+        this._rescheduleItem = item;
+        // Default to current execution/due date, or current time if not set
+        const defaultDate = item.__due_date || DateTime.now();
+        this._rescheduleDate = defaultDate.toFormat("yyyy-LL-dd");
+        // Only set time for chores (tasks don't have time)
+        if (item.__type === "chore") {
+            this._rescheduleTime = defaultDate.toFormat("HH:mm");
+        } else {
+            this._rescheduleTime = null;
+        }
+        this._rescheduleDialogOpen = true;
+        this.requestUpdate();
+    }
+
+    _closeRescheduleDialog() {
+        this._rescheduleDialogOpen = false;
+        this._rescheduleItem = null;
+        this.requestUpdate();
+    }
+
+    async _skipToNextDay() {
+        if (!this._rescheduleItem) {
+            return;
+        }
+
+        try {
+            const isChore = this._rescheduleItem.__type === "chore";
+            const tomorrow = DateTime.now().plus({ days: 1 });
+            const tomorrowDateStr = tomorrow.toFormat('yyyy-MM-dd');
+
+            if (isChore) {
+                // For chores: use the current time from the reschedule dialog or default to current time
+                const timeInput = this.shadowRoot.getElementById('reschedule-time');
+                let timeStr = timeInput ? timeInput.value : null;
+                
+                // If no time set, use the current chore's execution time or current time
+                if (!timeStr || !timeStr.trim()) {
+                    if (this._rescheduleTime) {
+                        timeStr = this._rescheduleTime;
+                    } else {
+                        const now = DateTime.now();
+                        timeStr = now.toFormat('HH:mm');
+                    }
+                }
+                
+                // Format datetime string
+                const timeParts = timeStr.split(':');
+                let dateTimeStr;
+                if (timeParts.length >= 2) {
+                    dateTimeStr = `${tomorrowDateStr} ${timeParts[0]}:${timeParts[1]}:00`;
+                } else {
+                    dateTimeStr = `${tomorrowDateStr} 00:00:00`;
+                }
+                
+                // Get original chore data to preserve assigned user
+                const grocyEntity = this.entities.find(e => e.attributes.chores || e.attributes.tasks);
+                let assignedUserId = "";
+                if (grocyEntity) {
+                    const originalChore = grocyEntity.attributes.chores.find(c => c.id === this._rescheduleItem.id);
+                    if (originalChore && originalChore.next_execution_assigned_user) {
+                        assignedUserId = String(originalChore.next_execution_assigned_user.id);
+                    }
+                }
+                
+                // Use Grocy service to update the chore
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "chores",
+                    object_id: this._rescheduleItem.id,
+                    data: {
+                        rescheduled_date: dateTimeStr,
+                        rescheduled_next_execution_assigned_to_user_id: assignedUserId
+                    }
+                });
+            } else {
+                // For tasks: need to include all original data plus updated due_date
+                const grocyEntity = this.entities.find(e => e.attributes.tasks);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
+                const originalTask = grocyEntity.attributes.tasks.find(t => t.id === this._rescheduleItem.id);
+                if (!originalTask) {
+                    throw new Error("Original task data not found");
+                }
+
+                // Build payload with all original data and updated due_date
+                const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
+                const taskData = {
+                    name: originalTask.name || "",
+                    description: originalTask.description || "",
+                    category_id: categoryId,
+                    assigned_to_user_id: originalTask.assigned_to_user ? String(originalTask.assigned_to_user.id) : "",
+                    due_date: tomorrowDateStr
+                };
+
+                // Use Grocy service to update the task
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "tasks",
+                    object_id: this._rescheduleItem.id,
+                    data: taskData
+                });
+            }
+
+            this._closeRescheduleDialog();
+            // Refresh the card by requesting an update
+            this.requestUpdate();
+            if (this.config.browser_mod) {
+                const itemType = this._rescheduleItem.__type === "chore" ? "Chore" : "Task";
+                this._hass.callService("browser_mod", "notification", {
+                    message: this._translate(`${itemType} rescheduled to next day`),
+                    notification_id: "grocy-reschedule"
+                });
+            }
+        } catch (error) {
+            console.error("Error skipping to next day:", error);
+            const itemType = this._rescheduleItem.__type === "chore" ? "chore" : "task";
+            alert(this._translate(`Failed to skip ${itemType} to next day: `) + (error.message || error));
+        }
+    }
+
+    async _doReschedule() {
+        if (!this._rescheduleItem) {
+            return;
+        }
+
+        const dateStr = this.shadowRoot.getElementById('reschedule-date').value;
+
+        if (!dateStr) {
+            alert(this._translate("Date is required"));
+            return;
+        }
+
+        try {
+            if (this._rescheduleItem.__type === "chore") {
+                // For chores: combine date and time into "YYYY-MM-DD HH:MM:SS"
+                const timeInput = this.shadowRoot.getElementById('reschedule-time');
+                const timeStr = timeInput ? timeInput.value : null;
+                // ha-time-input returns "HH:MM" format, we need to add seconds
+                let dateTimeStr;
+                if (timeStr && timeStr.trim()) {
+                    // Remove any existing seconds if present and add :00
+                    const timeParts = timeStr.split(':');
+                    if (timeParts.length >= 2) {
+                        // Take only HH:MM and add :00 for seconds
+                        dateTimeStr = `${dateStr} ${timeParts[0]}:${timeParts[1]}:00`;
+                    } else {
+                        dateTimeStr = `${dateStr} 00:00:00`;
+                    }
+                } else {
+                    dateTimeStr = `${dateStr} 00:00:00`;
+                }
+                
+                // Get original chore data to preserve assigned user
+                const grocyEntity = this.entities.find(e => e.attributes.chores || e.attributes.tasks);
+                let assignedUserId = "";
+                if (grocyEntity) {
+                    const originalChore = grocyEntity.attributes.chores.find(c => c.id === this._rescheduleItem.id);
+                    if (originalChore && originalChore.next_execution_assigned_user) {
+                        assignedUserId = String(originalChore.next_execution_assigned_user.id);
+                    }
+                }
+                
+                // Use Grocy service to update the chore
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "chores",
+                    object_id: this._rescheduleItem.id,
+                    data: {
+                        rescheduled_date: dateTimeStr,
+                        rescheduled_next_execution_assigned_to_user_id: assignedUserId
+                    }
+                });
+            } else {
+                // For tasks: need to include all original data plus updated due_date
+                // Get original task data from entity
+                const grocyEntity = this.entities.find(e => e.attributes.tasks);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
+                const originalTask = grocyEntity.attributes.tasks.find(t => t.id === this._rescheduleItem.id);
+                if (!originalTask) {
+                    throw new Error("Original task data not found");
+                }
+
+                // Build payload with all original data and updated due_date
+                // category_id might be in category.id or directly as category_id
+                const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
+                const taskData = {
+                    name: originalTask.name || "",
+                    description: originalTask.description || "",
+                    category_id: categoryId,
+                    assigned_to_user_id: originalTask.assigned_to_user ? String(originalTask.assigned_to_user.id) : "",
+                    due_date: dateStr || ""
+                };
+
+                // Use Grocy service to update the task
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "tasks",
+                    object_id: this._rescheduleItem.id,
+                    data: taskData
+                });
+            }
+
+            this._closeRescheduleDialog();
+            // Refresh the card by requesting an update
+            this.requestUpdate();
+            if (this.config.browser_mod) {
+                const itemType = this._rescheduleItem.__type === "chore" ? "Chore" : "Task";
+                this._hass.callService("browser_mod", "notification", {
+                    message: this._translate(`${itemType} rescheduled`),
+                    notification_id: "grocy-reschedule"
+                });
+            }
+        } catch (error) {
+            console.error("Error rescheduling item:", error);
+            const itemType = this._rescheduleItem.__type === "chore" ? "chore" : "task";
+            alert(this._translate(`Failed to reschedule ${itemType}: `) + (error.message || error));
+        }
+    }
+
+    _renderRescheduleDialog() {
+        if (!this._rescheduleDialogOpen || !this._rescheduleItem) {
+            return nothing;
+        }
+
+        const isChore = this._rescheduleItem.__type === "chore";
+        const heading = isChore ? this._translate("Reschedule Chore") : this._translate("Reschedule Task");
+
+        return html`
+            <ha-dialog
+                open
+                .heading=${heading}
+                @closed=${() => this._closeRescheduleDialog()}>
+                <div>
+                    <!-- Skip to next day button -->
+                    <div style="margin-bottom: 16px;">
+                        <ha-button 
+                            @click=${() => this._skipToNextDay()}
+                            raised
+                            style="width: 100%;">
+                            <ha-icon icon="mdi:skip-next-circle-outline" style="margin-right: 8px;"></ha-icon>
+                            ${this._translate("Skip to next day")}
+                        </ha-button>
+                    </div>
+                    
+                    <!-- Divider with OR -->
+                    <div style="display: flex; align-items: center; margin: 16px 0;">
+                        <div style="flex: 1; height: 1px; background-color: var(--divider-color, rgba(0,0,0,0.12));"></div>
+                        <span style="margin: 0 16px; color: var(--secondary-text-color);">${this._translate("OR")}</span>
+                        <div style="flex: 1; height: 1px; background-color: var(--divider-color, rgba(0,0,0,0.12));"></div>
+                    </div>
+                    
+                    <!-- Date and time pickers -->
+                    <ha-date-input
+                        id="reschedule-date"
+                        .locale=${this._hass.locale}
+                        .label=${this._translate("Date")}
+                        .value=${this._rescheduleDate}>
+                    </ha-date-input>
+                    ${isChore ? html`
+                        <ha-time-input
+                            id="reschedule-time"
+                            .locale=${this._hass.locale}
+                            .label=${this._translate("Time")}
+                            .value=${this._rescheduleTime}
+                            .format=${this.use_24_hours ? 24 : 12}>
+                        </ha-time-input>
+                    ` : nothing}
+                </div>
+                <ha-button 
+                    slot="primaryAction" 
+                    @click=${() => this._doReschedule()}
+                    raised>
+                    ${this._translate("Reschedule")}
+                </ha-button>
+                <ha-button 
+                    slot="secondaryAction" 
+                    @click=${() => this._closeRescheduleDialog()}
+                    outlined>
+                    ${this._translate("Cancel")}
+                </ha-button>
+            </ha-dialog>
+        `;
+    }
+
+    async _skipItem(item) {
+        try {
+            if (item.__type === "chore") {
+                // Use Grocy service to execute chore with skipped flag
+                // The service will handle tracked_time automatically (uses next_estimated_execution_time when skipped)
+                await this._hass.callService("grocy", "execute_chore", {
+                    chore_id: item.id,
+                    done_by: this._getUserId(),
+                    skipped: true
+                });
+            } else {
+                // For tasks: Skip to next day
+                // Calculate next day: next day of task's due date OR next day of today if task is in the past
+                let nextDay;
+                if (item.__due_date) {
+                    const taskDate = item.__due_date;
+                    const today = DateTime.now().startOf('day');
+                    const taskDateOnly = taskDate.startOf('day');
+                    
+                    if (taskDateOnly >= today) {
+                        // Task is today or in the future, skip to next day after task date
+                        nextDay = taskDateOnly.plus({ days: 1 });
+                    } else {
+                        // Task is in the past, skip to next day after today
+                        nextDay = today.plus({ days: 1 });
+                    }
+                } else {
+                    // No due date, skip to next day after today
+                    nextDay = DateTime.now().startOf('day').plus({ days: 1 });
+                }
+
+                const nextDayStr = nextDay.toFormat("yyyy-LL-dd");
+
+                // Get original task data to preserve all fields
+                const grocyEntity = this.entities.find(e => e.attributes.tasks);
+                if (!grocyEntity) {
+                    throw new Error("Grocy entity not found");
+                }
+                
+                const originalTask = grocyEntity.attributes.tasks.find(t => t.id === item.id);
+                if (!originalTask) {
+                    throw new Error("Original task data not found");
+                }
+
+                // Build payload with all original data and updated due_date
+                const categoryId = originalTask.category_id || (originalTask.category ? String(originalTask.category.id) : "");
+                const taskData = {
+                    name: originalTask.name || "",
+                    description: originalTask.description || "",
+                    category_id: categoryId,
+                    assigned_to_user_id: originalTask.assigned_to_user ? String(originalTask.assigned_to_user.id) : "",
+                    due_date: nextDayStr
+                };
+
+                // Use Grocy service to update the task
+                await this._hass.callService("grocy", "update_generic", {
+                    entity_type: "tasks",
+                    object_id: item.id,
+                    data: taskData
+                });
+            }
+
+            // Hide the item on the next render, for better visual feedback
+            this.local_cached_hidden_items.push(`${item.__type}${item.id}`);
+            this.requestUpdate();
+
+            // Refresh the card by requesting an update
+            this.requestUpdate();
+            if (this.config.browser_mod) {
+                const itemType = item.__type === "chore" ? "Chore" : "Task";
+                this._hass.callService("browser_mod", "notification", {
+                    message: this._translate(`${itemType} skipped`),
+                    notification_id: "grocy-skip"
+                });
+            }
+        } catch (error) {
+            console.error("Error skipping item:", error);
+            const itemType = item.__type === "chore" ? "chore" : "task";
+            alert(this._translate(`Failed to skip ${itemType}: `) + (error.message || error));
+        }
+    }
+
     _showTrackedToast(itemName) {
         this._showToast(itemName, this._translate("Tracked"));
     }
@@ -850,6 +1289,10 @@ class GrocyChoresCard extends LitElement {
                 if (item.assigned_to_user) {
                     item.__user_id = item.assigned_to_user.id;
                     item.assigned_to_name = item.assigned_to_user.display_name;
+                } else if (item.assigned_to_user_id) {
+                    // Handle case where assigned_to_user_id is provided directly
+                    item.__user_id = item.assigned_to_user_id;
+                    // Note: assigned_to_name will remain null/undefined in this case
                 }
                 
                 if (item.due_date != null) {
@@ -971,6 +1414,8 @@ class GrocyChoresCard extends LitElement {
         this.fixed_tiling_size = this.config.fixed_tiling_size ?? null;
         this.use_icons = this.config.use_icons ?? false;
         this.show_unassigned = this.config.show_unassigned ?? false;
+        this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
+        this.show_skip_next = this.config.show_skip_next ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
@@ -983,7 +1428,11 @@ class GrocyChoresCard extends LitElement {
 
     constructor() {
         super();
-        this.local_cached_hidden_items = []
+        this.local_cached_hidden_items = [];
+        this._rescheduleDialogOpen = false;
+        this._rescheduleItem = null;
+        this._rescheduleDate = null;
+        this._rescheduleTime = null;
     }
 
     getCardSize() {
