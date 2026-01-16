@@ -3,6 +3,8 @@ import {DateTime} from "luxon";
 import style from './style.js';
 
 class GrocyChoresCard extends LitElement {
+	
+	
 
     async loadCustomCreateTaskElements() {
         if(!customElements.get("ha-date-input") || !customElements.get("ha-textfield")) {
@@ -447,24 +449,56 @@ class GrocyChoresCard extends LitElement {
     }
 
     _renderTrackChoreButton(item) {
-        if (this.chore_icon != null) {
-            return html`
-                <mwc-icon-button class="track-button"
-                                 .label=${this._translate("Track")}
-                                 @click=${() => this._trackChore(item)}>
-                    <ha-icon class="track-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
-                             .icon=${this.chore_icon}></ha-icon>
-                </mwc-icon-button>
-            `
-        }
+	  return html`
+		<mwc-icon-button
+		  @click=${() => this._confirmAndTrackChore(item)}
+		  @contextmenu=${(e) => this._selectAndTrackChore(e, item)}
+		>
+		  <ha-icon .icon=${this.chore_icon}></ha-icon>
+		</mwc-icon-button>
+	  `;
+	}
+	
+	async _selectAndTrackChore(ev, item) {
+	  ev.preventDefault();
 
-        return html`
-            <mwc-button
-                    @click=${() => this._trackChore(item)}>
-                ${this._translate("Track")}
-            </mwc-button>
-        `
-    }
+	  const userId = await this._selectUserDialog();
+	  if (!userId) return;
+
+	  this._trackChore(item, userId);
+	}
+	
+	async _confirmAndTrackChore(item) {
+		if (!this.confirm_track) {
+			this._trackChore(item);
+			return;
+		}
+
+		const result = await this._confirmDialog(
+			this._translate("Confirm"),
+			this._translate("Are you sure you want to track this chore?")
+		);
+
+		if (result) {
+			this._trackChore(item);
+		}
+	}
+
+	async _confirmAndTrackTask(item) {
+		if (!this.confirm_track) {
+			this._trackTask(item.id, item.name);
+			return;
+		}
+
+		const result = await this._confirmDialog(
+			this._translate("Confirm"),
+			this._translate("Are you sure you want to track this task?")
+		);
+
+		if (result) {
+			this._trackTask(item.id, item.name);
+		}
+	}
 
     _renderRescheduleButton(item) {
         const shouldUseIcon = this.use_icons !== false;
@@ -513,23 +547,15 @@ class GrocyChoresCard extends LitElement {
     }
 
     _renderTrackTaskButton(item) {
-        if (this.task_icon != null) {
-            return html`
-                <mwc-icon-button class="track-checkbox"
-                                 .label=${this._translate("Track")} @click=${() => this._trackTask(item.id, item.name)}>
-                    <ha-icon class="track-button-icon" style="--mdc-icon-size: ${this.task_icon_size}px;"
-                             .icon=${this.task_icon}></ha-icon>
-                </mwc-icon-button>
-            `
-        }
-
-        return html`
-            <mwc-button
-                    @click=${() => this._trackTask(item.id, item.name)}>
-                ${this._translate("Track")}
-            </mwc-button>
-        `
-    }
+		if (this.task_icon != null) {
+			return html`
+				<mwc-icon-button @click=${() => this._confirmAndTrackTask(item)}>
+					<ha-icon .icon=${this.task_icon} style="--mdc-icon-size: ${this.task_icon_size}px;"></ha-icon>
+				</mwc-icon-button>
+			`;
+		}
+		return html`<mwc-button @click=${() => this._confirmAndTrackTask(item)}>${this._translate("Track")}</mwc-button>`;
+	}
 
     _calculateDaysTillNow(date) {
         const now = DateTime.now();
@@ -785,32 +811,85 @@ class GrocyChoresCard extends LitElement {
             return this.userId ?? 1;
         }
     }
+	
+	async _selectUserDialog() {
+		return new Promise((resolve) => {
+			const dialog = document.createElement('ha-dialog');
+			dialog.heading = this._translate("Who completed this chore?");
 
-    _trackChore(item) {
-        // Hide the chore on the next render, for better visual feedback
-        this.local_cached_hidden_items.push(`chore${item.id}`);
-        this.requestUpdate();
-        
-        // Determine user ID: if filter_user is enabled, chore is unassigned, and filter_user is a single value, use it
-        let userId;
-        if (this.filter_user !== undefined && this._isUnassigned(item)) {
-            // Check if filter_user is a single value (not an array)
-            if (!Array.isArray(this.filter_user)) {
-                // Single value - use it (handle "current" special case)
-                userId = this.filter_user === "current" ? this._getUserId() : this.filter_user;
-            } else {
-                // It's an array, use normal logic
-                userId = this._getUserId();
-            }
-        } else {
-            userId = this._getUserId();
-        }
-        
-        this._hass.callService("grocy", "execute_chore", {
-            chore_id: item.id, done_by: userId
-        });
-        this._showTrackedToast(item.name);
-    }
+			// Container voor buttons
+			const container = document.createElement('div');
+			container.style.display = "flex";
+			container.style.flexDirection = "column";
+			container.style.gap = "12px"; // ruimte tussen buttons
+			container.style.marginTop = "16px";
+
+			// Haal de users uit de kaartconfig, behalve "default"
+			const users = Object.entries(this.userId ?? {}).filter(([key]) => key !== "default");
+
+			// Voeg een button per gebruiker toe
+			users.forEach(([name, id]) => {
+				const btn = document.createElement('ha-button');
+				btn.textContent = name;
+				btn.setAttribute('raised', ''); // primary style
+				btn.addEventListener('click', () => {
+					dialog.open = false;
+					resolve(id);
+				});
+				container.appendChild(btn);
+			});
+
+			// Cancel button
+			const cancelBtn = document.createElement('ha-button');
+			cancelBtn.textContent = this._translate("Cancel");
+			cancelBtn.setAttribute('appearance', 'secondary'); // <-- zorgt voor grijze kleur
+			cancelBtn.addEventListener('click', () => {
+				dialog.open = false;
+				resolve(null);
+			});
+			container.appendChild(cancelBtn);
+
+			dialog.appendChild(container);
+			dialog.addEventListener('closed', () => dialog.remove());
+			document.body.appendChild(dialog);
+			dialog.open = true;
+		});
+	}
+
+    _trackChore(item, overrideUserId = null) {
+		// Hide the chore on the next render, for better visual feedback
+		this.local_cached_hidden_items.push(`chore${item.id}`);
+		this.requestUpdate();
+
+		let userId;
+
+		// 1️⃣ Long-press override has priority
+		if (overrideUserId !== null) {
+			userId = overrideUserId;
+		}
+		// 2️⃣ Existing filter_user logic (unchanged)
+		else if (this.filter_user !== undefined && this._isUnassigned(item)) {
+			if (!Array.isArray(this.filter_user)) {
+				userId = this.filter_user === "current"
+					? this._getUserId()
+					: this.filter_user;
+			} else {
+				userId = this._getUserId();
+			}
+		}
+		// 3️⃣ Default behavior
+		else {
+			userId = this._getUserId();
+		}
+
+		this._hass.callService("grocy", "execute_chore", {
+			chore_id: item.id,
+			done_by: userId
+		});
+
+		this._showTrackedToast(item.name);
+	}
+
 
     _trackTask(taskId, taskName) {
         // Hide the task on the next render, for better visual feedback
@@ -821,6 +900,53 @@ class GrocyChoresCard extends LitElement {
         });
         this._showTrackedToast(taskName);
     }
+	
+	async _confirmDialog(title, message) {
+	  return new Promise((resolve) => {
+		const dialog = document.createElement("ha-dialog");
+		dialog.open = true;
+
+		dialog.style.setProperty("--mdc-dialog-min-width", "400px");
+		dialog.style.setProperty("--mdc-dialog-max-width", "560px");
+
+		/* Header */
+		const header = document.createElement("ha-dialog-header");
+		header.innerHTML = `<span slot="title">${title}</span>`;
+		dialog.appendChild(header);
+
+		/* Content */
+		const content = document.createElement("div");
+		content.style.padding = "16px 24px 16px 24px";
+		content.style.display = "flex";
+		content.style.flexDirection = "column";
+		content.style.gap = "12px";
+		content.style.color = "var(--primary-text-color)";
+		content.innerHTML = `<p style="margin:0;">${message}</p>`;
+		dialog.appendChild(content);
+
+		/* Buttons */
+		const confirmButton = document.createElement("ha-button");
+		confirmButton.textContent = this._translate("Yes");
+		confirmButton.setAttribute("appearance", "accent");
+		confirmButton.addEventListener("click", () => {
+		  dialog.open = false;
+		  resolve(true);
+		});
+		content.appendChild(confirmButton);
+
+		const cancelButton = document.createElement("ha-button");
+		cancelButton.textContent = this._translate("No");
+		cancelButton.setAttribute("appearance", "plain");
+		cancelButton.addEventListener("click", () => {
+		  dialog.open = false;
+		  resolve(false);
+		});
+		content.appendChild(cancelButton);
+
+		dialog.addEventListener("closed", () => dialog.remove());
+		document.body.appendChild(dialog);
+	  });
+	}
 
     async _openRescheduleDialog(item) {
         await this.loadRescheduleElements();
@@ -1416,6 +1542,8 @@ class GrocyChoresCard extends LitElement {
         this.show_unassigned = this.config.show_unassigned ?? false;
         this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
         this.show_skip_next = this.config.show_skip_next ?? false;
+		// JV: Add confirm track option
+		this.confirm_track = this.config.confirm_track ?? false;
         if (this.use_icons) {
             this.task_icon = this.config.task_icon || 'mdi:checkbox-blank-outline';
             this.chore_icon = this.config.chore_icon || 'mdi:check-circle-outline';
