@@ -75,6 +75,7 @@ views:
 | description_max_length       | number      | **Optional** |          | When set and `show_description` is set, truncate shown descriptions to the number of characters specified. |
 | fixed_tiling_size            | number      | **Optional** |          | When set, provides a fixed value to the masonry tiling algorithm for card size, where 1 unit equals 50 pixels. When unset, calculate the size dynamically from the number of items in the todo list. Setting the value will give a more consistent layout of masonry elements, though they may not be well balanced. When unset, the cards will be more compactly tiled for layout, but may move around on page refresh as list length changes.
 | custom_sort            | string/map      | **Optional** |          | Modifies the sort order. See [here](#custom_sort) for details.
+| confirm_track            | bool      | **Optional** | `false`  | If enabled, the card will show a confirmation dialog before marking a chore or task as completed.
 ## Advanced options
 It is possible to translate the following English strings in the card to whatever you like.
 
@@ -128,7 +129,9 @@ Note that this name on the left hand side is the user's home assistant display n
 A `default` value may also be specified, specifying the userid to use for any Home Assistant user not otherwise specified.
 
 
-This also affects the behavior of filter_user. Specifying `filter_user: current` in the config will only show chores/tasks for the currently logged in user. 
+This also affects the behavior of filter_user. Specifying `filter_user: current` in the config will only show chores/tasks for the currently logged in user.
+
+
 
 ## <a name="custom_sort"></a> Custom Sorting
 
@@ -158,6 +161,11 @@ custom_sort:
 ```
 
 The exact fields available for sort are tied into the card implementation and may change in the future without notice. To see the full list of fields that are available, review the source code or use the browser debugger to inspect what keys of the item object are available for sorting. Note tasks and chores may support different keys, so they may not sort as expected if you show both and use a sort key that is not available for both.
+
+## User Selection for Tracking Chores
+The card supports selecting which user performed a chore when marking it as completed. This feature relies on the user_id mapping in the card configuration.
+
+When a chore is tracked, a long-press on the track button will open a user selection dialog showing all users defined in userId (excluding default). The selected user’s ID is then sent to Grocy as the done_by value. If no selection is made, the card falls back to the current user or the default ID. This allows multiple household members to clearly indicate who completed a task.
 
 ## Using the Collapsible Overflow
 Instead of the “Look in Grocy for X more items” text from older versions, this version can show all additional items in a collapsible overflow panel.
