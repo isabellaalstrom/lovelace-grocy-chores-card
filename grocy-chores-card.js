@@ -276,7 +276,7 @@ class GrocyChoresCard extends LitElement {
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
                         ${this._translate("{number} More Items", this.overflow.length)}
-                        <ha-icon slot="trailingIcon" style="--mdc-icon-size: ${this.expand_icon_size}px;"
+                        <ha-icon slot="end" style="--mdc-icon-size: ${this.expand_icon_size}px;"
                                  .icon=${"mdi:chevron-down"}></ha-icon>
                     </ha-button>
                 </div>
@@ -291,7 +291,7 @@ class GrocyChoresCard extends LitElement {
                     <ha-button class="expand-button show-more-button"
                                @click=${() => this._toggleOverflow(this.renderRoot)}>
                         ${this._translate("Show Less")}
-                        <ha-icon slot="trailingIcon"
+                        <ha-icon slot="end"
                                  .icon=${"mdi:chevron-up"}></ha-icon>
                     </ha-button>
                 </div>
@@ -416,19 +416,19 @@ class GrocyChoresCard extends LitElement {
 
     _renderAddTaskButton() {
         return html`
-            <mwc-button class="hide-button" @click=${() => this._toggleAddTask()}>
-                <ha-icon icon="mdi:chevron-down" id="add-task-icon"></ha-icon>
+            <ha-button class="hide-button" @click=${() => this._toggleAddTask()}>
+                <ha-icon slot="start" icon="mdi:chevron-down" id="add-task-icon"></ha-icon>
                 ${this._translate("Add task")}
-            </mwc-button>
+            </ha-button>
         `
     }
 
     _renderAddTask() {
         return html`
             <div id="add-task-row" class="add-row hidden-class">
-                <mwc-button @click=${() => this._addTask()}>
+                <ha-button @click=${() => this._addTask()}>
                     <ha-icon class="add-icon" icon="mdi:plus"></ha-icon>
-                </mwc-button>
+                </ha-button>
                 <ha-textfield
                         id="add-task"
                         class="add-input"
@@ -452,20 +452,20 @@ class GrocyChoresCard extends LitElement {
     _renderTrackChoreButton(item) {
         if (this.chore_icon != null) {
             return html`
-                <mwc-icon-button class="track-button"
+                <ha-icon-button class="track-button"
                                  .label=${this._translate("Track")}
                                  @click=${() => this._trackChore(item)}>
                     <ha-icon class="track-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
                              .icon=${this.chore_icon}></ha-icon>
-                </mwc-icon-button>
+                </ha-icon-button>
             `
         }
 
         return html`
-            <mwc-button
+            <ha-button
                     @click=${() => this._trackChore(item)}>
                 ${this._translate("Track")}
-            </mwc-button>
+            </ha-button>
         `
     }
 
@@ -475,20 +475,20 @@ class GrocyChoresCard extends LitElement {
         
         if (icon != null) {
             return html`
-                <mwc-icon-button class="reschedule-button"
+                <ha-icon-button class="reschedule-button"
                                  .label=${this._translate("Reschedule")}
                                  @click=${() => this._openRescheduleDialog(item)}>
                     <ha-icon class="reschedule-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
                              .icon=${icon}></ha-icon>
-                </mwc-icon-button>
+                </ha-icon-button>
             `
         }
 
         return html`
-            <mwc-button
+            <ha-button
                     @click=${() => this._openRescheduleDialog(item)}>
                 ${this._translate("Reschedule")}
-            </mwc-button>
+            </ha-button>
         `
     }
 
@@ -498,39 +498,39 @@ class GrocyChoresCard extends LitElement {
         
         if (icon != null) {
             return html`
-                <mwc-icon-button class="skip-button"
+                <ha-icon-button class="skip-button"
                                  .label=${this._translate("Skip")}
                                  @click=${() => this._skipItem(item)}>
                     <ha-icon class="skip-button-icon" style="--mdc-icon-size: ${this.chore_icon_size}px;"
                              .icon=${icon}></ha-icon>
-                </mwc-icon-button>
+                </ha-icon-button>
             `
         }
 
         return html`
-            <mwc-button
+            <ha-button
                     @click=${() => this._skipItem(item)}>
                 ${this._translate("Skip")}
-            </mwc-button>
+            </ha-button>
         `
     }
 
     _renderTrackTaskButton(item) {
         if (this.task_icon != null) {
             return html`
-                <mwc-icon-button class="track-checkbox"
+                <ha-icon-button class="track-checkbox"
                                  .label=${this._translate("Track")} @click=${() => this._trackTask(item.id, item.name)}>
                     <ha-icon class="track-button-icon" style="--mdc-icon-size: ${this.task_icon_size}px;"
                              .icon=${this.task_icon}></ha-icon>
-                </mwc-icon-button>
+                </ha-icon-button>
             `
         }
 
         return html`
-            <mwc-button
+            <ha-button
                     @click=${() => this._trackTask(item.id, item.name)}>
                 ${this._translate("Track")}
-            </mwc-button>
+            </ha-button>
         `
     }
 
