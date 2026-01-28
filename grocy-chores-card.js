@@ -377,7 +377,7 @@ class GrocyChoresCard extends LitElement {
     }
 
     _shouldRenderDueInDays(item) {
-        return !this.hide_text_with_no_data || item.__due_date != null;
+        return this.show_due_date && (!this.hide_text_with_no_data || item.__due_date != null);
     }
 
     _renderDueInDays(item) {
@@ -1602,6 +1602,7 @@ class GrocyChoresCard extends LitElement {
         this.show_unassigned = this.config.show_unassigned ?? false;
         this.show_enable_reschedule = this.config.show_enable_reschedule ?? false;
         this.show_skip_next = this.config.show_skip_next ?? false;
+        this.show_due_date = this.config.show_due_date ?? true;
         this.show_more_info_popup = this.config.show_more_info_popup ?? false;
         this.disable_show_assign_to_me = this.config.disable_show_assign_to_me ?? false;
         if (this.use_icons) {
